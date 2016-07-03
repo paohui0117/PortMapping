@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window size="800,572" sizebox="4,4,6,6" roundcorner="5,5" caption="0,0,0,22" mininfo="800,570">
+  <Font id="0" name="宋体" size="13" bold="true" />
+  <Font id="1" name="宋体" size="14" bold="true" />
+  <Default name="VScrollBar" value="button1normalimage=&quot;  file='scrollbar.bmp' source='0,90,16,106' mask='#FFFF00FF'&quot; button1hotimage=&quot;  file='scrollbar.bmp' source='18,90,34,106' mask='#FFFF00FF'&quot; button1pushedimage=&quot;  file='scrollbar.bmp' source='36,90,52,106' mask='#FFFF00FF'&quot; button1disabledimage=&quot;  file='scrollbar.bmp' source='54,90,70,106' mask='#FFFF00FF'&quot; button2normalimage=&quot;  file='scrollbar.bmp' source='0,108,16,124' mask='#FFFF00FF'&quot; button2hotimage=&quot;  file='scrollbar.bmp' source='18,108,34,124' mask='#FFFF00FF'&quot; button2pushedimage=&quot;  file='scrollbar.bmp' source='36,108,52,124' mask='#FFFF00FF'&quot; button2disabledimage=&quot;  file='scrollbar.bmp' source='54,108,70,124' mask='#FFFF00FF'&quot; thumbnormalimage=&quot;  file='scrollbar.bmp' source='0,126,16,142' corner='2,2,2,2' mask='#FFFF00FF'&quot; thumbhotimage=&quot;  file='scrollbar.bmp' source='18,126,34,142' corner='2,2,2,2' mask='#FFFF00FF'&quot; thumbpushedimage=&quot;  file='scrollbar.bmp' source='36,126,52,142' corner='2,2,2,2' mask='#FFFF00FF'&quot; thumbdisabledimage=&quot;  file='scrollbar.bmp' source='54,126,70,142' corner='2,2,2,2' mask='#FFFF00FF'&quot; railnormalimage=&quot;  file='scrollbar.bmp' source='0,144,16,160' corner='2,2,2,2' mask='#FFFF00FF'&quot; railhotimage=&quot;  file='scrollbar.bmp' source='18,144,34,160' corner='2,2,2,2' mask='#FFFF00FF'&quot; railpushedimage=&quot;  file='scrollbar.bmp' source='36,144,52,160' corner='2,2,2,2' mask='#FFFF00FF'&quot; raildisabledimage=&quot;  file='scrollbar.bmp' source='54,144,70,160' corner='2,2,2,2' mask='#FFFF00FF'&quot; bknormalimage=&quot;  file='scrollbar.bmp' source='0,162,16,178' corner='2,2,2,2' mask='#FFFF00FF'&quot; bkhotimage=&quot;  file='scrollbar.bmp' source='18,162,34,178' corner='2,2,2,2' mask='#FFFF00FF'&quot; bkpushedimage=&quot;  file='scrollbar.bmp' source='36,162,52,178' corner='2,2,2,2' mask='#FFFF00FF'&quot; bkdisabledimage=&quot;  file='scrollbar.bmp' source='54,162,70,178' corner='2,2,2,2' mask='#FFFF00FF'&quot; " />
+  <Default name="HScrollBar" value="button1normalimage=&quot;  file='scrollbar.bmp' source='0,0,16,16' mask='#FFFF00FF'&quot; button1hotimage=&quot;  file='scrollbar.bmp' source='18,0,34,16' mask='#FFFF00FF'&quot; button1pushedimage=&quot;  file='scrollbar.bmp' source='36,0,52,16' mask='#FFFF00FF'&quot; button1disabledimage=&quot;  file='scrollbar.bmp' source='54,0,70,16' mask='#FFFF00FF'&quot; button2normalimage=&quot;  file='scrollbar.bmp' source='0,18,16,34' mask='#FFFF00FF'&quot; button2hotimage=&quot;  file='scrollbar.bmp' source='18,18,34,34' mask='#FFFF00FF'&quot; button2pushedimage=&quot;  file='scrollbar.bmp' source='36,18,52,34' mask='#FFFF00FF'&quot; button2disabledimage=&quot;  file='scrollbar.bmp' source='54,18,70,34' mask='#FFFF00FF'&quot; thumbnormalimage=&quot;  file='scrollbar.bmp' source='0,36,16,52' corner='2,2,2,2' mask='#FFFF00FF'&quot; thumbhotimage=&quot;  file='scrollbar.bmp' source='18,36,34,52' corner='2,2,2,2' mask='#FFFF00FF'&quot; thumbpushedimage=&quot;  file='scrollbar.bmp' source='36,36,52,52' corner='2,2,2,2' mask='#FFFF00FF'&quot; thumbdisabledimage=&quot;  file='scrollbar.bmp' source='54,36,70,52' corner='2,2,2,2' mask='#FFFF00FF'&quot; railnormalimage=&quot;  file='scrollbar.bmp' source='0,54,16,70' corner='2,2,2,2' mask='#FFFF00FF'&quot; railhotimage=&quot;  file='scrollbar.bmp' source='18,54,34,70' corner='2,2,2,2' mask='#FFFF00FF'&quot; railpushedimage=&quot;  file='scrollbar.bmp' source='36,54,52,70' corner='2,2,2,2' mask='#FFFF00FF'&quot; raildisabledimage=&quot;  file='scrollbar.bmp' source='54,54,70,70' corner='2,2,2,2' mask='#FFFF00FF'&quot; bknormalimage=&quot;  file='scrollbar.bmp' source='0,72,16,88' corner='2,2,2,2' mask='#FFFF00FF'&quot; bkhotimage=&quot;  file='scrollbar.bmp' source='18,72,34,88' corner='2,2,2,2' mask='#FFFF00FF'&quot; bkpushedimage=&quot;  file='scrollbar.bmp' source='36,72,52,88' corner='2,2,2,2' mask='#FFFF00FF'&quot; bkdisabledimage=&quot;  file='scrollbar.bmp' source='54,72,70,88' corner='2,2,2,2' mask='#FFFF00FF'&quot; " />
+  <VerticalLayout bkcolor="#ffffffff" bordercolor="#FF768D9B" bordersize="1" borderround="5,5" inset="1,1,1,1">
+    <!--标题栏-->
+    <HorizontalLayout height="22" bkcolor="#FFCDEBEB">
+      <Label text="Port Mapping" textpadding="20, 5, 0, 0" textcolor="#FF259925" font="1"/>
+      <HorizontalLayout width="105" inset="0,3,0,0">
+        <Button name="minbtn" maxwidth="26" maxheight="17" normalimage="  file='sys_dlg_min.png' source='52,0,78,17'" hotimage="  file='sys_dlg_min.png' source='26,0,52,17'" pushedimage="  file='sys_dlg_min.png' source='0,0,26,17'"/>
+        <Button name="maxbtn" maxwidth="26" maxheight="17" normalimage="  file='sys_dlg_max.png' source='52,0,78,17'" hotimage="  file='sys_dlg_max.png' source='26,0,52,18'" pushedimage="  file='sys_dlg_max.png' source='0,0,26,17'"/>
+        <Button name="restorebtn" visible="false" maxwidth="26" maxheight="17" normalimage="  file='sys_dlg_restore.png' source='52,0,78,17'" hotimage="  file='sys_dlg_restore.png' source='26,0,52,17'" pushedimage="  file='sys_dlg_restore.png' source='0,0,26,17'" />
+        <Button name="closebtn" maxwidth="45" maxheight="17" normalimage="  file='sys_dlg_close.png' source='90,0,135,17'" hotimage="  file='sys_dlg_close.png' source='45,0,90,17'" pushedimage="  file='sys_dlg_close.png' source='0,0,45,17'"/>
+      </HorizontalLayout>
+    </HorizontalLayout>
+    <!--内容-->
+    <HorizontalLayout >
+      <!--左边为添加映射的区域-->
+      <VerticalLayout width="200" inset="10,20,10,20" childpadding="10">
+        <Label text="本地IP:" height="20" />
+        <Combo name="local_ip" height="19" normalimage="file='Combo_nor.bmp'" pushedimage="file='Combo_over.bmp'" />
+        
+        <Label text="本地端口:" height="20"  />
+        <Edit name="local_port" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
+        
+        <Label text="映射IP:" height="40" padding="0,20,0,0" />
+        <Edit name="mapping_ip" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
+      
+        <Label text="映射端口:" height="20" />
+        <Edit name="mapping_port" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
+      
+        <Label text="协议:" height="40" padding="0,20,0,0" />
+        <Combo name="local_ip" height="19" normalimage="file='Combo_nor.bmp'" pushedimage="file='Combo_over.bmp'" 
+               itemtextpadding="5,0,0,0">
+          <ListLabelElement  text="TCP" />
+          <ListLabelElement  text="UDP" />
+        </Combo>
+        
+        <Button name="add_mapping" text="Add" height="20" width="47" padding="0,20,0,0"
+                normalimage="file='button_normal.png'" pushedimage="file='button_normal.png'" hotimage="button_pushed.png" />
+      </VerticalLayout>
+      <!--左展开/隐藏按钮-->
+        <VerticalLayout name="test" bkcolor="#FFdddddd" width="6">
+          <Control />
+          <button name="btn_left" text="◀"  textcolor="#FF999999" hottextcolor="#FF000000"/>
+          <Control />
+        </VerticalLayout>
+      <!--右边为信息显示区域-->
+    </HorizontalLayout>
+  </VerticalLayout>
+</Window>
