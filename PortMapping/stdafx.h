@@ -18,4 +18,7 @@
 #include <tchar.h>
 
 #include "../DuiLib/UIlib.h"
+#ifdef _DEBUG
+#include "vld.h"
+#endif 
 // TODO:  在此处引用程序需要的其他头文件
