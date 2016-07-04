@@ -60,7 +60,7 @@ void CMyListItem::DoEvent(DuiLib::TEventUI& event)
 		::SetCursor(::LoadCursor(NULL, MAKEINTRESOURCE(IDC_HAND)));
 		return;	
 	}
-	if (event.Type == UIEVENT_BUTTONDOWN || event.Type == UIEVENT_RBUTTONDOWN)
+	if (event.Type == UIEVENT_BUTTONDOWN)
 	{
 		if (IsEnabled()) {
 			m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMCLICK, nCur);

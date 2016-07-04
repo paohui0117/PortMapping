@@ -23,7 +23,8 @@ private:
 	CListUI* m_pMapping_List;		//映射关系列表
 	CListUI* m_pConnect_List;		//链接信息列表
 private:
-	bool ButtonNotify(void* pNotify);//按钮相应消息
+	bool ButtonNotify(void* pNotify);//按钮Notify消息
+	bool ListNotify(void* pNotify);//列表Notify消息
 	void Test();
 };
 

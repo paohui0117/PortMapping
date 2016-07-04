@@ -57,12 +57,14 @@ void CMainDlg::InitWindow()
 	if (pCur->GetInterface(DUI_CTR_LIST))
 	{
 		m_pMapping_List = static_cast<CListUI*>(pCur);
+		m_pMapping_List->OnNotify += MakeDelegate(this, &CMainDlg::ListNotify);
 	}
 
 	pCur = m_PaintManager.FindSubControlByName(nullptr, L"connect_list");
 	if (pCur->GetInterface(DUI_CTR_LIST))
 	{
 		m_pConnect_List = static_cast<CListUI*>(pCur);
+		m_pConnect_List->OnNotify += MakeDelegate(this, &CMainDlg::ListNotify);
 	}
 	m_pLeft_layout = m_PaintManager.FindSubControlByName(nullptr, L"left_layout");
 	Test();
@@ -105,6 +107,28 @@ bool CMainDlg::ButtonNotify(void* pNotify)
 		}
 	}
 	return true;
+}
+
+bool CMainDlg::ListNotify(void* pNotify)
+{
+	TNotifyUI* pNotifyUI = (TNotifyUI*)pNotify;
+	if (!pNotifyUI || !pNotifyUI->pSender)
+		return true;
+	if (pNotifyUI->sType == DUI_MSGTYPE_MENU)//菜单弹出消息
+	{
+		CListUI* pList = (CListUI*)pNotifyUI->pSender;
+		RECT rcHead = pList->GetHeader()->GetPos();
+		if (PtInRect(&rcHead, pNotifyUI->ptMouse))
+			return true;
+		if (pList == m_pMapping_List)
+		{
+			int a = 10;
+		}
+		else if (pList == m_pConnect_List)
+		{
+			int a = 10;
+		}
+	}
 }
 
 void CMainDlg::Test()

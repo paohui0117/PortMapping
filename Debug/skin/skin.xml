@@ -54,7 +54,7 @@
       <!--右边为信息显示区域-->
       <VerticalLayout inset="0,1,1,0">
         <!--映射关系列表-->
-        <List name="mapping_list" itemalign="center" itemlinecolor="#ffc0c0c0" itemselectedbkcolor="#ffc0c0c0">
+        <List name="mapping_list" itemalign="center" itemlinecolor="#ffc0c0c0" itemselectedbkcolor="#ffc0c0c0" menu="true">
           <ListHeader bordercolor="#ffc0c0c0" bordersize="1" bkcolor="#FFededed" inset="1,1,1,1">
             <ListHeaderItem text="本地IP" width="120" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="本地端口" width="80" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
@@ -77,7 +77,7 @@
           <Control />
         </HorizontalLayout>
         <!--链接情况表-->
-        <List visible="false" name="connect_list">
+        <List visible="false" name="connect_list" menu="true">
           <ListHeader bordercolor="#ffc0c0c0" bordersize="1" bkcolor="#FFededed" inset="1,1,1,1">
             <ListHeaderItem text="客户端IP" width="120" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="客户端端口" width="80" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
