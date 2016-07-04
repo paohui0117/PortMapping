@@ -129,6 +129,7 @@ bool CMainDlg::ListNotify(void* pNotify)
 			int a = 10;
 		}
 	}
+	return true;
 }
 
 void CMainDlg::Test()
