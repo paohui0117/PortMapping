@@ -147,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainDlg.h" />
+    <ClInclude Include="MyListItem.h" />
     <ClInclude Include="PortMapping.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -154,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainDlg.cpp" />
+    <ClCompile Include="MyListItem.cpp" />
     <ClCompile Include="PortMapping.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

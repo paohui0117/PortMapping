@@ -24,5 +24,6 @@ private:
 	CListUI* m_pConnect_List;		//链接信息列表
 private:
 	bool ButtonNotify(void* pNotify);//按钮相应消息
+	void Test();
 };
 

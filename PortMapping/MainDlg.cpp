@@ -1,7 +1,6 @@
 ﻿#include "stdafx.h"
 #include "MainDlg.h"
-#include "resource.h"
-
+#include "MyListItem.h"
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr)
@@ -66,6 +65,7 @@ void CMainDlg::InitWindow()
 		m_pConnect_List = static_cast<CListUI*>(pCur);
 	}
 	m_pLeft_layout = m_PaintManager.FindSubControlByName(nullptr, L"left_layout");
+	Test();
 }
 
 LRESULT CMainDlg::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& bHandled)
@@ -105,4 +105,14 @@ bool CMainDlg::ButtonNotify(void* pNotify)
 		}
 	}
 	return true;
+}
+
+void CMainDlg::Test()
+{
+	CMyListItem* pItem = new CMyListItem;
+	pItem->AddText(L"192.168.1.101");
+	pItem->AddText(L"1234");
+	pItem->AddText(L"13", true);
+	pItem->SetClickTextFont(2);
+	m_pMapping_List->Add(pItem);
 }
