@@ -68,6 +68,17 @@ void CMainDlg::InitWindow()
 	m_pLeft_layout = m_PaintManager.FindSubControlByName(nullptr, L"left_layout");
 }
 
+LRESULT CMainDlg::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& bHandled)
+{
+	//屏蔽escape键
+	if (uMsg == WM_KEYDOWN && wParam == VK_ESCAPE)
+	{
+		bHandled = true;
+		return S_OK;
+	}
+	return WindowImplBase::MessageHandler(uMsg, wParam, lParam, bHandled);
+}
+
 bool CMainDlg::ButtonNotify(void* pNotify)
 {
 	TNotifyUI* pNotifyUI = (TNotifyUI*)pNotify;

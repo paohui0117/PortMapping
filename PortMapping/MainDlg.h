@@ -13,8 +13,7 @@ protected:
 public:
 	//重写基类虚函数
 	virtual void InitWindow() override;//在OnCreate最后调用
-
-
+	virtual LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, bool& bHandled) override;
 private:
 	CButtonUI*	m_pLeft_hide;		//左边隐藏 显示按钮
 	CButtonUI*  m_pBottom_hide;		//下列表隐藏  显示按钮
