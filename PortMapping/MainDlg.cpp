@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "MainDlg.h"
 #include "MyListItem.h"
+#include "UIMenu.h"
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr)
@@ -122,7 +123,11 @@ bool CMainDlg::ListNotify(void* pNotify)
 			return true;
 		if (pList == m_pMapping_List)
 		{
-			int a = 10;
+			CMenuWnd* pMenu = new CMenuWnd(m_hWnd);
+			STRINGorID xml(L"menutest.xml");
+			POINT pt = pNotifyUI->ptMouse;
+			ClientToScreen(m_hWnd, &pt);
+			pMenu->Init(nullptr, xml, _T("xml"), pt);
 		}
 		else if (pList == m_pConnect_List)
 		{
