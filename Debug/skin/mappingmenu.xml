@@ -2,7 +2,7 @@
 <Window>
   <Font id="0" name="微软雅黑" size="12" bold="false" default="true" />
   <Font id="1" name="微软雅黑" size="12" bold="true"/>
-  <Default name="Menu" value="bordersize=&quot;1&quot; bordercolor=&quot;#FFcdcdcd&quot; inset=&quot;2,2,2,2&quot; itemtextpadding=&quot;10,0,0,0&quot; " />
+  <Default name="Menu" value="bordersize=&quot;1&quot; bordercolor=&quot;#FFcdcdcd&quot; inset=&quot;1,1,1,1&quot; itemtextpadding=&quot;10,0,0,0&quot; " />
   <Menu bkcolor="#FFFFFFFF">
     <MenuElement text="123123" textcolor="#FF000000">
       <MenuElement text="菜单测试0        ">
