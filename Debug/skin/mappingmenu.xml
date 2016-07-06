@@ -3,23 +3,13 @@
   <Font id="0" name="微软雅黑" size="12" bold="false" default="true" />
   <Font id="1" name="微软雅黑" size="12" bold="true"/>
   <Default name="Menu" value="bordersize=&quot;1&quot; bordercolor=&quot;#FFcdcdcd&quot; inset=&quot;1,1,1,1&quot; itemtextpadding=&quot;10,0,0,0&quot; " />
-  <Menu bkcolor="#FFFFFFFF">
-    <MenuElement text="123123" textcolor="#FF000000">
-      <MenuElement text="菜单测试0        ">
-        <MenuElement text="     菜单测ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd试1        " />
-        <MenuElement text="     菜单测试2        " />
-      </MenuElement>
-      <MenuElement text="菜单测试3        " />
-      <MenuElement text="     菜单测试4        ">
-        <MenuElement text="     菜单测试5        ">
-          <MenuElement text="     菜单测试6        " />
-          <MenuElement text="     菜单测试7        " />
-        </MenuElement>
-        <MenuElement text="     菜单测试8        " >
-          <MenuElement text="     菜单测试a        " />
-          <MenuElement text="     菜单测试b       " />
-        </MenuElement>
-      </MenuElement>
-    </MenuElement>
+  <Menu bkcolor="#FFFFFFFF" width="120">
+    <MenuElement text="开始" name="start"/>
+    <MenuElement text="停止" name="stop"/>
+    <MenuElement text="删除" name="delete"/>
+    <MenuElement text="————————" height="5" enabled="false"/>
+    <MenuElement text="开始所有选中" name="start_sel"/>
+    <MenuElement text="停止所有选中" name="stop_sel"/>
+    <MenuElement text="删除所有选中" name="delete_sel"/>
   </Menu>
 </Window>

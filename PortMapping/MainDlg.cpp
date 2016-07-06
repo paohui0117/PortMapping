@@ -38,7 +38,7 @@ void CMainDlg::InitWindow()
 		m_pLeft_hide = static_cast<CButtonUI*>(pCur);
 		m_pLeft_hide->OnNotify += MakeDelegate(this, &CMainDlg::ButtonNotify);
 	}
-		
+
 
 	pCur = m_PaintManager.FindSubControlByName(nullptr, L"btn_bottom");
 	if (pCur->GetInterface(DUI_CTR_BUTTON))
@@ -53,7 +53,7 @@ void CMainDlg::InitWindow()
 		m_pMenu_hide = static_cast<CButtonUI*>(pCur);
 		m_pMenu_hide->OnNotify += MakeDelegate(this, &CMainDlg::ButtonNotify);
 	}
-		
+
 	pCur = m_PaintManager.FindSubControlByName(nullptr, L"mapping_list");
 	if (pCur->GetInterface(DUI_CTR_LIST))
 	{
@@ -68,9 +68,28 @@ void CMainDlg::InitWindow()
 		m_pConnect_List->OnNotify += MakeDelegate(this, &CMainDlg::ListNotify);
 	}
 	m_pLeft_layout = m_PaintManager.FindSubControlByName(nullptr, L"left_layout");
+
+	if (m_PaintManager.GetRoot())
+	{
+		m_PaintManager.GetRoot()->OnNotify += MakeDelegate(this, &CMainDlg::RootNotify);
+	}
 	Test();
 }
-
+bool CMainDlg::RootNotify(void* p)
+{
+	TNotifyUI* pNotify = (TNotifyUI*)p;
+	if (!pNotify)
+		return false;
+	if (pNotify->sType == DUI_MSGTYPE_MENUITEM_INIT)
+	{
+		OnMenuItemInit((CMenuElementUI*)pNotify->wParam, pNotify->lParam);
+	}
+	else if (pNotify->sType == DUI_MSGTYPE_MENUITEM_CLICK)
+	{
+		OnMenuItemClick(LPCWSTR(pNotify->wParam), pNotify->lParam);
+	}
+	return false;
+}
 LRESULT CMainDlg::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& bHandled)
 {
 	//屏蔽escape键
@@ -80,6 +99,33 @@ LRESULT CMainDlg::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& 
 		return S_OK;
 	}
 	return WindowImplBase::MessageHandler(uMsg, wParam, lParam, bHandled);
+}
+
+LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+	if (uMsg == WM_USER_MENUITEM_CLICK)
+	{
+		m_PaintManager.SendNotify(m_PaintManager.GetRoot(), DUI_MSGTYPE_MENUITEM_CLICK, wParam, lParam);
+		bHandled = true;
+		return S_OK;
+	}
+	bHandled = false;
+	return 0;
+}
+
+void CMainDlg::OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param)
+{
+	if (!pMenuItem)
+		return;
+	int a = 10;
+}
+
+void CMainDlg::OnMenuItemClick(LPCWSTR pName, LPARAM l_param)
+{
+	if (!pName)
+		return;
+	MessageBox(m_hWnd, pName, L"菜单单击", MB_OK);
+	int a = 10;
 }
 
 bool CMainDlg::ButtonNotify(void* pNotify)
@@ -104,7 +150,7 @@ bool CMainDlg::ButtonNotify(void* pNotify)
 		}
 		else if (pNotifyUI->pSender == m_pMenu_hide)
 		{
-			
+
 		}
 	}
 	return true;
@@ -121,17 +167,17 @@ bool CMainDlg::ListNotify(void* pNotify)
 		RECT rcHead = pList->GetHeader()->GetPos();
 		if (PtInRect(&rcHead, pNotifyUI->ptMouse))
 			return true;
+		POINT pt = pNotifyUI->ptMouse;
+		ClientToScreen(m_hWnd, &pt);
 		if (pList == m_pMapping_List)
 		{
-			CMenuWnd* pMenu = new CMenuWnd(m_hWnd);
-			STRINGorID xml(L"menutest.xml");
-			POINT pt = pNotifyUI->ptMouse;
-			ClientToScreen(m_hWnd, &pt);
-			pMenu->Init(nullptr, xml, _T("xml"), pt);
+			STRINGorID xml(L"mappingmenu.xml");
+			ShowMenu(&m_PaintManager, xml, pt);
 		}
 		else if (pList == m_pConnect_List)
 		{
-			int a = 10;
+			STRINGorID xml(L"connectmenu.xml");
+			ShowMenu(&m_PaintManager, xml, pt);
 		}
 	}
 	return true;

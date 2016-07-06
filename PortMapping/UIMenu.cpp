@@ -5,6 +5,9 @@
 namespace DuiLib {
 
 /////////////////////////////////////////////////////////////////////////////////////
+//for message
+CPaintManagerUI* s_parent_paint = nullptr;
+CDuiString	s_menuitem_name;
 //
 ContextMenuObserver s_context_menu_observer;
 
@@ -52,7 +55,6 @@ bool CMenuUI::Add(CControlUI* pControl)
 	}
 	return CListUI::Add(pControl);
 }
-
 bool CMenuUI::AddAt(CControlUI* pControl, int iIndex)
 {
 	CMenuElementUI* pMenuItem = static_cast<CMenuElementUI*>(pControl->GetInterface(kMenuElementUIInterfaceName));
@@ -100,7 +102,7 @@ bool CMenuUI::Remove(CControlUI* pControl)
 
 	SIZE CMenuUI::EstimateSize(SIZE szAvailable)
 {
-	int cxFixed = 0;
+	int cxFixed = m_cxyFixed.cx;;
     int cyFixed = 0;
     for( int it = 0; it < GetCount(); it++ ) {
         CControlUI* pControl = static_cast<CControlUI*>(GetItemAt(it));
@@ -149,6 +151,7 @@ BOOL CMenuWnd::Receive(ContextMenuParam param)
 	{
 	case 1:
 		Close();
+		s_parent_paint = nullptr;
 		break;
 	case 2:
 		{
@@ -244,6 +247,7 @@ LRESULT CMenuWnd::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			LPCTSTR pDefaultAttributes = m_pOwner->GetManager()->GetDefaultAttributeList(kMenuUIInterfaceName);
 			if( pDefaultAttributes ) {
 				m_pLayout->ApplyAttributeList(pDefaultAttributes);
+				m_pm.AddDefaultAttributeList(kMenuUIInterfaceName, pDefaultAttributes, true);
 			}
 			m_pLayout->SetBkColor(0xFFFFFFFF);
 			//m_pLayout->SetBorderColor(0xFF85E4FF);
@@ -293,7 +297,7 @@ LRESULT CMenuWnd::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			RECT rcWindow;
 			GetWindowRect(m_pOwner->GetManager()->GetPaintWindow(), &rcWindow);
 
-			rc.top = rcOwner.top;
+			rc.top = rcOwner.top - m_pLayout->GetInset().top;
 			rc.bottom = rc.top + cyFixed;
 			::MapWindowRect(m_pOwner->GetManager()->GetPaintWindow(), HWND_DESKTOP, &rc);
 			rc.left = rcWindow.right;
@@ -387,8 +391,8 @@ LRESULT CMenuWnd::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			szAvailable = pRoot->EstimateSize(szAvailable);
 			m_pm.SetInitSize(szAvailable.cx, szAvailable.cy);
 
-			DWORD dwAlignment = eMenuAlignment_Left | eMenuAlignment_Top;
-
+			//DWORD dwAlignment = eMenuAlignment_Left | eMenuAlignment_Top;
+			DWORD dwAlignment = 0;
 			SIZE szInit = m_pm.GetInitSize();
 			CDuiRect rc;
 			CDuiPoint point = m_BasedPoint;
@@ -396,7 +400,8 @@ LRESULT CMenuWnd::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			rc.top = point.y;
 			rc.right = rc.left + szInit.cx;
 			rc.bottom = rc.top + szInit.cy;
-
+			dwAlignment |= rc.right > rcWork.right ? eMenuAlignment_Right : eMenuAlignment_Left;
+			dwAlignment |= rc.bottom > rcWork.bottom ? eMenuAlignment_Bottom : eMenuAlignment_Top;
 			int nWidth = rc.GetWidth();
 			int nHeight = rc.GetHeight();
 
@@ -416,7 +421,8 @@ LRESULT CMenuWnd::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			MoveWindow(m_hWnd, rc.left, rc.top, rc.GetWidth(), rc.GetHeight(), FALSE);
 			SetWindowPos(m_hWnd, HWND_TOPMOST, rc.left, rc.top, rc.GetWidth(), rc.GetHeight(), SWP_SHOWWINDOW);
 		}
-
+		if (m_pm.GetRoot())
+			m_pm.GetRoot()->OnNotify += MakeDelegate(this, &CMenuWnd::MenuNotify);
 		return 0;
     }
     else if( uMsg == WM_CLOSE ) {
@@ -469,7 +475,23 @@ LRESULT CMenuWnd::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     if( m_pm.MessageHandler(uMsg, wParam, lParam, lRes) ) return lRes;
     return CWindowWnd::HandleMessage(uMsg, wParam, lParam);
 }
-
+bool CMenuWnd::MenuNotify(void* p)
+{
+	TNotifyUI* pNotify = (TNotifyUI*)p;
+	if (s_parent_paint && pNotify->sType == DUI_MSGTYPE_WINDOWINIT)
+	{
+		//第一次显示时针对每一个显示的menuitem，发送init消息给父窗口处理
+		CContainerUI* pCont = (CContainerUI*)m_pm.GetRoot();
+		for (int it = 0; it < pCont->GetCount(); it++) {
+			if (pCont->GetItemAt(it)->GetInterface(kMenuElementUIInterfaceName) != NULL)
+			{
+				//发送给父窗口的控件树的根节点，方便处理
+				s_parent_paint->SendNotify(s_parent_paint->GetRoot(), DUI_MSGTYPE_MENUITEM_INIT, (WPARAM)pCont->GetItemAt(it));
+			}
+		}
+	}
+	return false;
+}
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
@@ -642,6 +664,11 @@ void CMenuElementUI::DoEvent(TEventUI& event)
 			}
 			else
 			{
+				if (s_parent_paint && s_parent_paint->GetPaintWindow())//发送消息给弹出菜单的窗口
+				{
+					s_menuitem_name = m_sName;
+					PostMessage(s_parent_paint->GetPaintWindow(), WM_USER_MENUITEM_CLICK, (WPARAM)s_menuitem_name.GetData(), 0);
+				}
 				ContextMenuParam param;
 				param.hWnd = m_pManager->GetPaintWindow();
 				param.wParam = 1;
@@ -707,5 +734,14 @@ void CMenuElementUI::CreateMenuWnd()
 	m_pWindow->Init(static_cast<CMenuElementUI*>(this), _T(""), _T(""), CDuiPoint());
 }
 
-
+bool ShowMenu(CPaintManagerUI* pManager, const STRINGorID& xml, const POINT& pt)
+{
+	if (!pManager)
+		return false;
+	s_parent_paint = pManager;
+	s_menuitem_name.Empty();
+	CMenuWnd* pMenu = new CMenuWnd(s_parent_paint->GetPaintWindow());
+	pMenu->Init(nullptr, xml, L"xml", pt);
+	return true;
+}
 } // namespace DuiLib

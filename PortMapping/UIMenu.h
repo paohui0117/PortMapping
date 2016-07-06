@@ -8,7 +8,9 @@
 #include "observer_impl_base.hpp"
 
 namespace DuiLib {
-
+#define WM_USER_MENUITEM_CLICK (WM_USER + 1000)
+#define DUI_MSGTYPE_MENUITEM_INIT (L"menuiteminit")
+#define DUI_MSGTYPE_MENUITEM_CLICK (L"menuitemclick")
 /////////////////////////////////////////////////////////////////////////////////////
 //
 struct ContextMenuParam
@@ -49,7 +51,8 @@ public:
 	virtual void DoEvent(TEventUI& event);
 
     virtual bool Add(CControlUI* pControl);
-    virtual bool AddAt(CControlUI* pControl, int iIndex);
+	
+	virtual bool AddAt(CControlUI* pControl, int iIndex);
 
     virtual int GetItemIndex(CControlUI* pControl) const;
     virtual bool SetItemIndex(CControlUI* pControl, int iIndex);
@@ -77,9 +80,10 @@ public:
     void OnFinalMessage(HWND hWnd);
 
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
+	
 	BOOL Receive(ContextMenuParam param);
 
+	bool MenuNotify(void* p);
 public:
 	HWND m_hParent;
 	POINT m_BasedPoint;
@@ -119,7 +123,7 @@ public:
 protected:
 	CMenuWnd* m_pWindow;
 };
-
+bool ShowMenu(CPaintManagerUI* pManager, const STRINGorID& xml, const POINT& pt);//µ¯³ö²Ëµ¥
 } // namespace DuiLib
 
 #endif // __UIMENU_H__
