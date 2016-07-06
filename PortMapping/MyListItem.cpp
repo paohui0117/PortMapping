@@ -1,6 +1,35 @@
 #include "stdafx.h"
 #include "MyListItem.h"
 using namespace DuiLib;
+//common fun
+CDuiString a2w(const char* str)
+{
+	if (!str)
+		return L"";
+	int wlength = MultiByteToWideChar(CP_ACP, 0, str, -1, nullptr, 0);
+	if (wlength < 1)
+		return L"";
+	wchar_t* pw = new wchar_t[wlength + 1];
+	memset(pw, 0, sizeof(wchar_t) * (wlength + 1));
+	MultiByteToWideChar(CP_ACP, 0, str, -1, pw, wlength);
+	CDuiString wstr(pw);
+	delete[] pw;
+	return wstr;
+}
+string w2a(const wchar_t* str)
+{
+	if (!str)
+		return "";
+	int alength = WideCharToMultiByte(CP_ACP, 0, str, -1, nullptr, 0, nullptr, nullptr);
+	if (alength < 1)
+		return "";
+	char* pa = new char[alength + 1];
+	memset(pa, 0, sizeof(char) * (alength + 1));
+	WideCharToMultiByte(CP_ACP, 0, str, -1, pa, alength, nullptr, nullptr);
+	string astr(pa);
+	delete[] pa;
+	return astr;
+}
 struct ListItemText
 {
 	CDuiString	strData;	//ÄÚÈÝ
@@ -191,12 +220,41 @@ int CMyListItem::AddText(const DuiLib::CDuiString& strData, bool bClick)
 	return -1;
 }
 
+bool CMyListItem::SetText(int nIndex, const DuiLib::CDuiString& strData)
+{
+	ListItemText* pCur = (ListItemText*)m_text_array.GetAt(nIndex);
+	if (pCur)
+	{
+		pCur->strData = strData;
+		return true;
+	}
+	return false;
+}
+
+bool CMyListItem::SetClick(int nIndex, bool bClick)
+{
+	ListItemText* pCur = (ListItemText*)m_text_array.GetAt(nIndex);
+	if (pCur)
+	{
+		pCur->bClick = bClick;
+		if (pCur->bClick && pCur->pRc == nullptr)
+			pCur->pRc = new RECT;
+		if (!pCur->bClick && pCur->pRc)
+		{
+			delete pCur->pRc;
+			pCur->pRc = nullptr;
+		}
+		return true;
+	}
+	return false;
+}
+
 bool CMyListItem::DeleteText(int nIndex)
 {
 	ListItemText* pCur = (ListItemText*)m_text_array.GetAt(nIndex);
 	if (pCur )
 	{
-		if (pCur->bClick && pCur->pRc)
+		if (pCur->pRc)
 			delete pCur->pRc;
 		delete pCur;
 	}
@@ -268,4 +326,38 @@ bool CMyListItem::GetTextRect(int nIndex, RECT* prc, const RECT& rcitem)
 		prc->right += nwidth;
 	}
 	return true;
+}
+//////////////////////////////////////////////////////////////////
+CMappingListItem::CMappingListItem(MappingInfo* pInfo)
+{
+	m_pInfo = pInfo;
+}
+
+CMappingListItem::~CMappingListItem()
+{
+}
+
+void CMappingListItem::DoInit()
+{
+	CMyListItem::DoInit();
+
+}
+
+bool CMappingListItem::Start(bool bSelect)
+{
+	return false;
+}
+
+bool CMappingListItem::Stop(bool bSelect)
+{
+	return false;
+}
+
+bool CMappingListItem::Delete(bool bSelect)
+{
+	return false;
+}
+
+void CMappingListItem::Updata()
+{
 }

@@ -2289,7 +2289,7 @@ void CListContainerElementUI::DoEvent(TEventUI& event)
     if( event.Type == UIEVENT_BUTTONDOWN || event.Type == UIEVENT_RBUTTONDOWN )
     {
         if( IsEnabled() ){
-            m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMCLICK);
+            m_pManager->SendNotify(this, DUI_MSGTYPE_ITEMCLICK, -1);
             Select();
             Invalidate();
         }

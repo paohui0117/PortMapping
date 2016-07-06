@@ -16,6 +16,9 @@
     <Filter Include="menu">
       <UniqueIdentifier>{c67327d2-9620-414d-a9c9-3f20c212bbc2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="listitem">
+      <UniqueIdentifier>{c8c2687b-b9c7-4a27-8374-97c9a2ae62d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -36,9 +39,6 @@
     <ClInclude Include="MainDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MyListItem.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="UIMenu.h">
       <Filter>menu</Filter>
     </ClInclude>
@@ -47,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="LibuvAdapter.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MyListItem.h">
+      <Filter>listitem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -59,14 +62,14 @@
     <ClCompile Include="MainDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="MyListItem.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="UIMenu.cpp">
       <Filter>menu</Filter>
     </ClCompile>
     <ClCompile Include="LibuvAdapter.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MyListItem.cpp">
+      <Filter>listitem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
