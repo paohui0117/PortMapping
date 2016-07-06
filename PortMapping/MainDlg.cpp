@@ -191,4 +191,17 @@ void CMainDlg::Test()
 	pItem->AddText(L"13", true);
 	pItem->SetClickTextFont(2);
 	m_pMapping_List->Add(pItem);
+	pItem->OnNotify += MakeDelegate(this, &CMainDlg::ListItemNotify);
+}
+bool CMainDlg::ListItemNotify(void* p)
+{
+	TNotifyUI* pNotify = (TNotifyUI*)p;
+	if (!pNotify)
+		return false;
+	if (pNotify->wParam != -1 && pNotify->sType == DUI_MSGTYPE_ITEMCLICK)
+	{
+		m_pConnect_List->SetVisible(true);
+		m_pBottom_hide->SetText(L"▼" );
+	}
+	return false;
 }

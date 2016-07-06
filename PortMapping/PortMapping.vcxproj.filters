@@ -45,6 +45,9 @@
     <ClInclude Include="observer_impl_base.hpp">
       <Filter>menu</Filter>
     </ClInclude>
+    <ClInclude Include="LibuvAdapter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -61,6 +64,9 @@
     </ClCompile>
     <ClCompile Include="UIMenu.cpp">
       <Filter>menu</Filter>
+    </ClCompile>
+    <ClCompile Include="LibuvAdapter.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

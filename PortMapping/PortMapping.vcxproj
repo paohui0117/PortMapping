@@ -88,7 +88,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../Visual Leak Detector/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Visual Leak Detector/include;../libuv-dll/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -148,6 +148,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LibuvAdapter.h" />
     <ClInclude Include="MainDlg.h" />
     <ClInclude Include="MyListItem.h" />
     <ClInclude Include="observer_impl_base.hpp" />
@@ -158,6 +159,9 @@
     <ClInclude Include="UIMenu.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LibuvAdapter.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MainDlg.cpp" />
     <ClCompile Include="MyListItem.cpp" />
     <ClCompile Include="PortMapping.cpp" />

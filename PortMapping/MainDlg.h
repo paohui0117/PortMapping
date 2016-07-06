@@ -1,5 +1,7 @@
 #pragma once
 #include "UIMenu.h"
+#include "LibuvAdapter.h"
+
 using namespace DuiLib;
 class CMainDlg : public WindowImplBase
 {
@@ -22,6 +24,7 @@ private:
 	bool RootNotify(void* p);
 	bool ButtonNotify(void* pNotify);//按钮Notify消息
 	bool ListNotify(void* pNotify);//列表Notify消息
+	bool ListItemNotify(void* p);
 
 	void OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param);
 	void OnMenuItemClick(LPCWSTR pName, LPARAM l_param);
