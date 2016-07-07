@@ -54,9 +54,10 @@
       <!--右边为信息显示区域-->
       <VerticalLayout inset="0,1,1,0">
         <!--映射关系列表-->
-        <List name="mapping_list" itemalign="center" itemlinecolor="#ffc0c0c0" itemselectedbkcolor="#ffc0c0c0" menu="true">
+        <List name="mapping_list" itemalign="center" itemlinecolor="#ffc0c0c0" 
+              itemselectedbkcolor="#ffc0c0c0" menu="true" vscrollbar ="true" hscrollbar ="true" >
           <ListHeader bordercolor="#ffc0c0c0" bordersize="1" bkcolor="#FFededed" inset="1,1,1,1">
-            <ListHeaderItem text="本地IP" width="120" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
+            <ListHeaderItem text="本地IP" width="130" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="本地端口" width="80" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="映射IP" width="100" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="映射端口" width="80" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>

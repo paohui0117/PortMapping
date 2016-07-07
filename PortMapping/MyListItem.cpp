@@ -1,35 +1,7 @@
 #include "stdafx.h"
 #include "MyListItem.h"
 using namespace DuiLib;
-//common fun
-CDuiString a2w(const char* str)
-{
-	if (!str)
-		return L"";
-	int wlength = MultiByteToWideChar(CP_ACP, 0, str, -1, nullptr, 0);
-	if (wlength < 1)
-		return L"";
-	wchar_t* pw = new wchar_t[wlength + 1];
-	memset(pw, 0, sizeof(wchar_t) * (wlength + 1));
-	MultiByteToWideChar(CP_ACP, 0, str, -1, pw, wlength);
-	CDuiString wstr(pw);
-	delete[] pw;
-	return wstr;
-}
-string w2a(const wchar_t* str)
-{
-	if (!str)
-		return "";
-	int alength = WideCharToMultiByte(CP_ACP, 0, str, -1, nullptr, 0, nullptr, nullptr);
-	if (alength < 1)
-		return "";
-	char* pa = new char[alength + 1];
-	memset(pa, 0, sizeof(char) * (alength + 1));
-	WideCharToMultiByte(CP_ACP, 0, str, -1, pa, alength, nullptr, nullptr);
-	string astr(pa);
-	delete[] pa;
-	return astr;
-}
+
 struct ListItemText
 {
 	CDuiString	strData;	//内容
@@ -166,6 +138,8 @@ void CMyListItem::DrawItemText(HDC hDC, const RECT& rcItem)
 			iTextColor = pInfo->dwDisabledTextColor;
 		}
 		RECT rcText = curRect;
+		if (i == 0)//给checkbox留空间
+			rcText.left += 10;
 		rcText.left += pInfo->rcTextPadding.left;
 		rcText.right -= pInfo->rcTextPadding.right;
 		rcText.top += pInfo->rcTextPadding.top;
@@ -339,8 +313,31 @@ CMappingListItem::~CMappingListItem()
 
 void CMappingListItem::DoInit()
 {
+	//添加状态图标
+	CControlUI* pCtrl = new CControlUI;
+	pCtrl->SetAttribute(L"pos", L"18,5,30,17");
+	pCtrl->SetFloat();
+	SIZE rs = { 12, 12 };
+	pCtrl->SetBorderRound(rs);
+	pCtrl->SetBkColor(0xffececec);
+	Add(pCtrl);
 	CMyListItem::DoInit();
+	if (!m_pInfo)
+		return;
+	AddText(L"stop");
+	AddText(L"0", true);
+	AddText(m_pInfo->bTCP? L"TCP":L"UDP");
+	AddText(L"0B");
+	AddText(L"0B");
+}
 
+void CMappingListItem::InitStringList(const DuiLib::CDuiString& strAgentIP, const DuiLib::CDuiString& strAgentPort,const DuiLib::CDuiString& strServerIP, const DuiLib::CDuiString& strServerPort)
+{
+	ClearText();
+	AddText(strAgentIP);
+	AddText(strAgentPort);
+	AddText(strServerIP);
+	AddText(strServerPort);
 }
 
 bool CMappingListItem::Start(bool bSelect)

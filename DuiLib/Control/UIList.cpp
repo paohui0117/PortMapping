@@ -236,7 +236,7 @@ void CListUI::SetPos(RECT rc, bool bNeedInvalidate)
 		for( int i = 0; i < m_ListInfo.nColumns; i++ ) {
 			CControlUI* pControl = static_cast<CControlUI*>(m_pHeader->GetItemAt(i));
 			if( !pControl->IsVisible() ) continue;
-			if( pControl->IsFloat() ) continue;
+			//if( pControl->IsFloat() ) continue;
 
 			RECT rcPos = pControl->GetPos();
 			if( iOffset > 0 ) {
@@ -1009,7 +1009,7 @@ void CListBodyUI::SetScrollPos(SIZE szPos)
         for( int i = 0; i < pInfo->nColumns; i++ ) {
             CControlUI* pControl = static_cast<CControlUI*>(pHeader->GetItemAt(i));
             if( !pControl->IsVisible() ) continue;
-            if( pControl->IsFloat() ) continue;
+            //if( pControl->IsFloat() ) continue;
 			pControl->Move(CDuiSize(-cx, -cy), false);
 			pInfo->rcColumn[i] = pControl->GetPos();
         }

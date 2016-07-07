@@ -75,6 +75,8 @@ class CLibuvAdapter
 public:
 	CLibuvAdapter();
 	virtual ~CLibuvAdapter();
+public:
+	MappingInfo* AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort, LPCWSTR strServerIP, LPCWSTR strServerPort, bool bTcp, int& err);
 private:
 	uv_loop_t*		m_pLoop;
 	//data:

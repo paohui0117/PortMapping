@@ -185,13 +185,9 @@ bool CMainDlg::ListNotify(void* pNotify)
 
 void CMainDlg::Test()
 {
-	CMyListItem* pItem = new CMyListItem;
-	pItem->AddText(L"192.168.1.101");
-	pItem->AddText(L"1234");
-	pItem->AddText(L"13", true);
-	pItem->SetClickTextFont(2);
+	CMappingListItem* pItem = new CMappingListItem(nullptr);
+	pItem->InitStringList(L"192.168.1.101", L"1234", L"192.168.1.101", L"3214");
 	m_pMapping_List->Add(pItem);
-	pItem->OnNotify += MakeDelegate(this, &CMainDlg::ListItemNotify);
 }
 bool CMainDlg::ListItemNotify(void* p)
 {

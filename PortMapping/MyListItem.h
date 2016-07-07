@@ -43,7 +43,8 @@ public:
 	virtual ~CMappingListItem();
 public:
 	virtual void DoInit() override;
-
+	void InitStringList(const DuiLib::CDuiString& strAgentIP, const DuiLib::CDuiString& strAgentPort,
+		const DuiLib::CDuiString& strServerIP, const DuiLib::CDuiString& strServerPort);
 	bool Start(bool bSelect = false);
 	bool Stop(bool bSelect = false);
 	bool Delete(bool bSelect = false);
