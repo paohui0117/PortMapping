@@ -3,7 +3,6 @@
 #include "MyListItem.h"
 #include "UIMenu.h"
 #include "EditUIEx.h"
-#include <regex>
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr),
@@ -11,12 +10,14 @@ CMainDlg::CMainDlg() :
 	m_pCmb_protocol(nullptr), m_pBtn_ADD(nullptr)
 {
 	m_pLibuv = new CLibuvAdapter;
+	m_pregex_IP = new wregex(L"^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)($|(?!\\.$)\\.)){4}$");
 }
 
 
 CMainDlg::~CMainDlg()
 {
 	delete m_pLibuv;
+	delete m_pregex_IP;
 }
 
 CDuiString CMainDlg::GetSkinFolder()
@@ -165,9 +166,7 @@ bool CMainDlg::CheckIP(void* p)
 	CheckInfo* pInfo = (CheckInfo*)p;
 	if (!pInfo)
 		return true;
-	wregex pattern(L"^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)($|(?!\\.$)\\.)){4}$");
-
-	if (!regex_match(pInfo->m_content.GetData(), pattern))
+	if (!regex_match(pInfo->m_content.GetData(), *m_pregex_IP))
 	{
 		pInfo->m_waring_info = L"IP格式错误！";
 		m_pBtn_ADD->SetEnabled(false);

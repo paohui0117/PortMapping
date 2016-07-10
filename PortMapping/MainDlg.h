@@ -2,6 +2,7 @@
 #include "UIMenu.h"
 #include "LibuvAdapter.h"
 #include "EditUIEx.h"
+#include <regex>
 
 using namespace DuiLib;
 class CMainDlg : public WindowImplBase
@@ -60,5 +61,7 @@ private:
 
 	vector<wstring>		m_vecLocalIP;
 	CLibuvAdapter*		m_pLibuv;
+
+	wregex*				m_pregex_IP;
 };
 
