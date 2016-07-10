@@ -274,7 +274,7 @@ void CEditWndEx::ShowToolTip(LPCWSTR strInfo)
 	{
 		return;
 	}
-		
+	m_plast = m_pOwner;
 	::ZeroMemory(&m_ToolTip, sizeof(TOOLINFO));
 	m_ToolTip.cbSize = sizeof(TOOLINFO);
 	m_ToolTip.uFlags = TTF_IDISHWND | TTF_ABSOLUTE;

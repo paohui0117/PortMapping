@@ -3,7 +3,7 @@
 #include "../libuv-dll/src/queue.h"
 
 //common fun
-LPCWSTR a2w(const char* str)//内存需要自己释放
+wstring a2w(const char* str)//内存需要自己释放
 {
 	if (!str)
 		return L"";
@@ -13,7 +13,9 @@ LPCWSTR a2w(const char* str)//内存需要自己释放
 	wchar_t* pw = new wchar_t[wlength + 1];
 	memset(pw, 0, sizeof(wchar_t) * (wlength + 1));
 	MultiByteToWideChar(CP_ACP, 0, str, -1, pw, wlength);
-	return pw;
+	wstring wstr(pw);
+	delete[] pw;
+	return wstr;
 }
 string w2a(const wchar_t* str)
 {
@@ -31,11 +33,17 @@ string w2a(const wchar_t* str)
 }
 CLibuvAdapter::CLibuvAdapter() : m_pLoop(nullptr)
 {
+	WSADATA wsa_data;
+	int errorno = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+	if (errorno != 0) {
+		
+	}
 }
 
 
 CLibuvAdapter::~CLibuvAdapter()
 {
+	WSACleanup();
 }
 
 MappingInfo* CLibuvAdapter::AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort, LPCWSTR strServerIP, LPCWSTR strServerPort, bool bTcp, int& err)
@@ -102,4 +110,32 @@ void CLibuvAdapter::RegisterAnsycWork(uv__work* pwork, void(* done)(uv__work* w,
 	QUEUE_INSERT_TAIL(&m_pLoop->wq, &pwork->wq);
 	uv_async_send(&m_pLoop->wq_async);
 	uv_mutex_unlock(&m_pLoop->wq_mutex);
+}
+
+bool CLibuvAdapter::GetLocalIP(vector<wstring>& vecIP)
+{
+	vecIP.clear();
+	char hostname[NI_MAXHOST] = { 0 };
+	if (!gethostname(hostname, NI_MAXHOST - 1) < 1)
+		return false;
+	struct addrinfo * result;
+	int error = getaddrinfo(hostname, NULL, NULL, &result);
+	if (0 != error)
+	{
+		return false;
+	}
+	addrinfo* cur = nullptr;
+	SOCKADDR_IN* curAddr = nullptr;
+	char ip[32] = { 0 };
+	for (cur = result; cur != NULL; cur = cur->ai_next)
+	{
+		curAddr = (SOCKADDR_IN*)(cur->ai_addr);
+		if (curAddr->sin_family != AF_INET)
+			continue;
+		if (uv_ip4_name(curAddr, ip, 32) != 0)
+			continue;
+		vecIP.push_back(a2w(ip));
+	}
+	freeaddrinfo(result);
+	return true;
 }

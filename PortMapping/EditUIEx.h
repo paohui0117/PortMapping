@@ -24,6 +24,7 @@ public:
 public:
 	void SetShowWaring(bool bWaring = true) { m_bShowWaring = bWaring; };
 	static void SetWaringColor(DWORD nCol) { CEditUIEx::m_nWaringCol = nCol; };
+	bool GetState() { return m_bOK; };
 private:
 	bool CheckContent();
 public:

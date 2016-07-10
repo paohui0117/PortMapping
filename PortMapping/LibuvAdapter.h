@@ -80,9 +80,11 @@ public:
 	MappingInfo* AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort, LPCWSTR strServerIP, LPCWSTR strServerPort, bool bTcp, int& err);
 	
 	bool StartMapping(MappingInfo* pMapping);//开始一个映射
+	bool GetLocalIP(vector<wstring>& vecIP);
 private:
 	bool InitLoop();
 	void RegisterAnsycWork(uv__work* pwork, void(*done)(struct uv__work *w, int status));
+	
 public:
 	uv_loop_t*		m_pLoop;
 private:
@@ -91,6 +93,6 @@ private:
 	uv_check_t		m_check_keeprun;
 	//data:
 	map<USHORT, MappingInfo>	m_mapMapping;
-	map<Connectkey, Connectkey> m_mapConnect;
+	map<Connectkey, ConnectInfo> m_mapConnect;
 };
 

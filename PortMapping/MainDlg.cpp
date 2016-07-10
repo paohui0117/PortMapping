@@ -8,13 +8,15 @@ CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr),
 	m_pEdit_agent_port(nullptr), m_pEdit_server_port(nullptr), m_pEdit_server_ip(nullptr),
-	m_pCmb_protocol(nullptr)
+	m_pCmb_protocol(nullptr), m_pBtn_ADD(nullptr)
 {
+	m_pLibuv = new CLibuvAdapter;
 }
 
 
 CMainDlg::~CMainDlg()
 {
+	delete m_pLibuv;
 }
 
 CDuiString CMainDlg::GetSkinFolder()
@@ -65,14 +67,14 @@ void CMainDlg::InitWindow()
 		m_pMenu_hide = static_cast<CButtonUI*>(pCur);
 		m_pMenu_hide->OnNotify += MakeDelegate(this, &CMainDlg::ButtonNotify);
 	}
-
+	//映射列表
 	pCur = m_PaintManager.FindSubControlByName(nullptr, L"mapping_list");
 	if (pCur->GetInterface(DUI_CTR_LIST))
 	{
 		m_pMapping_List = static_cast<CListUI*>(pCur);
 		m_pMapping_List->OnNotify += MakeDelegate(this, &CMainDlg::ListNotify);
 	}
-
+	//链接列表
 	pCur = m_PaintManager.FindSubControlByName(nullptr, L"connect_list");
 	if (pCur->GetInterface(DUI_CTR_LIST))
 	{
@@ -80,6 +82,13 @@ void CMainDlg::InitWindow()
 		m_pConnect_List->OnNotify += MakeDelegate(this, &CMainDlg::ListNotify);
 	}
 	m_pLeft_layout = m_PaintManager.FindSubControlByName(nullptr, L"left_layout");
+	//add按钮
+	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"add_mapping");
+	if (pCur->GetInterface(DUI_CTR_BUTTON))
+	{
+		m_pBtn_ADD = static_cast<CButtonUI*>(pCur);
+		m_pBtn_ADD->OnNotify += MakeDelegate(this, &CMainDlg::ButtonNotify);
+	}
 	//端口编辑控件
 	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"local_port");
 	if (pCur->GetInterface(DUI_CTR_EDITEX))
@@ -115,12 +124,14 @@ void CMainDlg::InitWindow()
 	{
 		m_pCmb_agent_ip = static_cast<CComboUI*>(pCur);
 		m_pCmb_agent_ip->SelectItem(0);
+		GetLocalIP();
 	}
 	
 	if (m_PaintManager.GetRoot())
 	{
 		m_PaintManager.GetRoot()->OnNotify += MakeDelegate(this, &CMainDlg::RootNotify);
 	}
+	
 	Test();
 }
 bool CMainDlg::CheckPort(void* p)
@@ -133,6 +144,7 @@ bool CMainDlg::CheckPort(void* p)
 		if (pInfo->m_content[i] < '0' || pInfo->m_content[i] > '9')
 		{
 			pInfo->m_waring_info = L"端口应该为1-65535";
+			m_pBtn_ADD->SetEnabled(false);
 			return false;
 		}
 			
@@ -141,8 +153,10 @@ bool CMainDlg::CheckPort(void* p)
 	if (nport < 1 || nport > 65535)
 	{
 		pInfo->m_waring_info = L"端口应该为1-65535";
+		m_pBtn_ADD->SetEnabled(false);
 		return false;
 	}
+	m_pBtn_ADD->SetEnabled(CheckAllInfo());
 	return true;
 }
 
@@ -151,14 +165,32 @@ bool CMainDlg::CheckIP(void* p)
 	CheckInfo* pInfo = (CheckInfo*)p;
 	if (!pInfo)
 		return true;
-	wregex pattern(L"^((25[0-5]|2[0-4]\d|[01]?\d\d?)($|(?!\.$)\.)){4}$");
+	wregex pattern(L"^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)($|(?!\\.$)\\.)){4}$");
 
 	if (!regex_match(pInfo->m_content.GetData(), pattern))
 	{
 		pInfo->m_waring_info = L"IP格式错误！";
+		m_pBtn_ADD->SetEnabled(false);
 		return false;
 	}
+	m_pBtn_ADD->SetEnabled(CheckAllInfo());
 	return true;
+}
+
+void CMainDlg::GetLocalIP()
+{
+	if (!m_pLibuv)
+		return;
+	if (m_pLibuv->GetLocalIP(m_vecLocalIP))
+	{
+		for (size_t i = 0; i < m_vecLocalIP.size(); i++)
+		{
+			CListLabelElementUI* pItem = new CListLabelElementUI();
+			pItem->SetText(m_vecLocalIP[i].c_str());
+			m_pCmb_agent_ip->Add(pItem);
+		}
+	}
+	m_pCmb_agent_ip->SelectItem(0);
 }
 
 bool CMainDlg::RootNotify(void* p)
@@ -214,6 +246,18 @@ void CMainDlg::OnMenuItemClick(LPCWSTR pName, LPARAM l_param)
 	int a = 10;
 }
 
+void CMainDlg::OnAddClick()
+{
+	
+}
+
+bool CMainDlg::CheckAllInfo()
+{
+	if (!m_pEdit_server_port || !m_pEdit_agent_port || !m_pEdit_server_ip)
+		return false;
+	return m_pEdit_server_port->GetState() & m_pEdit_agent_port->GetState() & m_pEdit_server_ip->GetState();
+}
+
 bool CMainDlg::ButtonNotify(void* pNotify)
 {
 	TNotifyUI* pNotifyUI = (TNotifyUI*)pNotify;
@@ -234,9 +278,9 @@ bool CMainDlg::ButtonNotify(void* pNotify)
 			m_pConnect_List->SetVisible(!bvisible);
 			m_pBottom_hide->SetText(!bvisible ? L"▼" : L"▲");
 		}
-		else if (pNotifyUI->pSender == m_pMenu_hide)
+		else if (pNotifyUI->pSender == m_pBtn_ADD)
 		{
-
+			OnAddClick();
 		}
 	}
 	return true;
