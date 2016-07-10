@@ -55,7 +55,7 @@
       <Filter>listitem</Filter>
     </ClInclude>
     <ClInclude Include="EditUIEx.h">
-      <Filter>头文件</Filter>
+      <Filter>EditEx</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -78,7 +78,7 @@
       <Filter>listitem</Filter>
     </ClCompile>
     <ClCompile Include="EditUIEx.cpp">
-      <Filter>源文件</Filter>
+      <Filter>EditEx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

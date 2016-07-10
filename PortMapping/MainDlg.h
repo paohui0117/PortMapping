@@ -27,7 +27,8 @@ private:
 	bool ButtonNotify(void* pNotify);//按钮Notify消息
 	bool ListNotify(void* pNotify);//列表Notify消息
 	bool ListItemNotify(void* p);
-	bool CheckEditContent(void* p);
+	bool CheckPort(void* p);
+	bool CheckIP(void* p);
 
 	void OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param);
 	void OnMenuItemClick(LPCWSTR pName, LPARAM l_param);
@@ -42,7 +43,12 @@ private:
 	CListUI* m_pMapping_List;		//映射关系列表
 	CListUI* m_pConnect_List;		//链接信息列表
 
-	CEditUIEx*	m_pEdit_port;
+	CEditUIEx*	m_pEdit_agent_port;
+	CEditUIEx*	m_pEdit_server_port;
 
+	CEditUIEx* m_pEdit_server_ip;
+
+	CComboUI*	m_pCmb_protocol;
+	CComboUI*  m_pCmb_agent_ip;
 };
 

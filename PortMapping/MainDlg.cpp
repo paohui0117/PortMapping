@@ -3,11 +3,12 @@
 #include "MyListItem.h"
 #include "UIMenu.h"
 #include "EditUIEx.h"
-
+#include <regex>
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr),
-	m_pEdit_port(nullptr)
+	m_pEdit_agent_port(nullptr), m_pEdit_server_port(nullptr), m_pEdit_server_ip(nullptr),
+	m_pCmb_protocol(nullptr)
 {
 }
 
@@ -79,21 +80,50 @@ void CMainDlg::InitWindow()
 		m_pConnect_List->OnNotify += MakeDelegate(this, &CMainDlg::ListNotify);
 	}
 	m_pLeft_layout = m_PaintManager.FindSubControlByName(nullptr, L"left_layout");
-
+	//端口编辑控件
 	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"local_port");
 	if (pCur->GetInterface(DUI_CTR_EDITEX))
 	{
-		m_pEdit_port = static_cast<CEditUIEx*>(pCur);
-		m_pEdit_port->OnCheck += MakeDelegate(this, &CMainDlg::CheckEditContent);
-		m_pEdit_port->SetText(m_pEdit_port->GetText());
+		m_pEdit_agent_port = static_cast<CEditUIEx*>(pCur);
+		m_pEdit_agent_port->OnCheck += MakeDelegate(this, &CMainDlg::CheckPort);
+		m_pEdit_agent_port->SetText(m_pEdit_agent_port->GetText());
 	}
+	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"mapping_port");
+	if (pCur->GetInterface(DUI_CTR_EDITEX))
+	{
+		m_pEdit_server_port = static_cast<CEditUIEx*>(pCur);
+		m_pEdit_server_port->OnCheck += MakeDelegate(this, &CMainDlg::CheckPort);
+		m_pEdit_server_port->SetText(m_pEdit_server_port->GetText());
+	}
+	//IP
+	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"mapping_ip");
+	if (pCur->GetInterface(DUI_CTR_EDITEX))
+	{
+		m_pEdit_server_ip = static_cast<CEditUIEx*>(pCur);
+		m_pEdit_server_ip->OnCheck += MakeDelegate(this, &CMainDlg::CheckIP);
+		m_pEdit_server_ip->SetText(m_pEdit_server_ip->GetText());
+	}
+
+	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"protocol");
+	if (pCur->GetInterface(DUI_CTR_COMBO))
+	{
+		m_pCmb_protocol = static_cast<CComboUI*>(pCur);
+		m_pCmb_protocol->SelectItem(0);
+	}
+	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"local_ip");
+	if (pCur->GetInterface(DUI_CTR_COMBO))
+	{
+		m_pCmb_agent_ip = static_cast<CComboUI*>(pCur);
+		m_pCmb_agent_ip->SelectItem(0);
+	}
+	
 	if (m_PaintManager.GetRoot())
 	{
 		m_PaintManager.GetRoot()->OnNotify += MakeDelegate(this, &CMainDlg::RootNotify);
 	}
 	Test();
 }
-bool CMainDlg::CheckEditContent(void* p)
+bool CMainDlg::CheckPort(void* p)
 {
 	CheckInfo* pInfo = (CheckInfo*)p;
 	if (!pInfo)
@@ -115,6 +145,22 @@ bool CMainDlg::CheckEditContent(void* p)
 	}
 	return true;
 }
+
+bool CMainDlg::CheckIP(void* p)
+{
+	CheckInfo* pInfo = (CheckInfo*)p;
+	if (!pInfo)
+		return true;
+	wregex pattern(L"^((25[0-5]|2[0-4]\d|[01]?\d\d?)($|(?!\.$)\.)){4}$");
+
+	if (!regex_match(pInfo->m_content.GetData(), pattern))
+	{
+		pInfo->m_waring_info = L"IP格式错误！";
+		return false;
+	}
+	return true;
+}
+
 bool CMainDlg::RootNotify(void* p)
 {
 	TNotifyUI* pNotify = (TNotifyUI*)p;

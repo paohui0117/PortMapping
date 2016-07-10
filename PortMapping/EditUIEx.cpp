@@ -36,11 +36,11 @@ protected:
 private://所有的CEditEx共用一个tooltip
 	static TOOLINFO m_ToolTip;
 	static HWND m_hwndTooltip;
-	
+	static CEditUIEx* m_plast;
 };
 TOOLINFO CEditWndEx::m_ToolTip;
 HWND CEditWndEx::m_hwndTooltip = nullptr;
-
+CEditUIEx* CEditWndEx::m_plast = nullptr;
 CEditWndEx::CEditWndEx() : m_pOwner(NULL), m_hBkBrush(NULL), m_bInit(false), m_bDrawCaret(false)
 {
 }
@@ -129,7 +129,11 @@ LPCTSTR CEditWndEx::GetSuperClassName() const
 
 void CEditWndEx::OnFinalMessage(HWND hWnd)
 {
-	HideToolTip();
+	HWND cur = GetFocus();
+	wchar_t name[20] = { 0 };
+	GetClassNameW(cur, name, 19);
+	if (_tccmp(name, L"EditUIEx") != 0)
+		HideToolTip();
 	m_pOwner->Invalidate();
 	// Clear reference and die
 	if (m_hBkBrush != NULL) ::DeleteObject(m_hBkBrush);
@@ -222,6 +226,7 @@ LRESULT CEditWndEx::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 LRESULT CEditWndEx::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	
 	LRESULT lRes = ::DefWindowProc(m_hWnd, uMsg, wParam, lParam);
 	if ((HWND)wParam != m_pOwner->GetManager()->GetPaintWindow()) {
 		::SendMessage(m_pOwner->GetManager()->GetPaintWindow(), WM_KILLFOCUS, wParam, lParam);
@@ -264,11 +269,15 @@ LRESULT CEditWndEx::OnEditChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 
 void CEditWndEx::ShowToolTip(LPCWSTR strInfo)
 {
-	if (CEditWndEx::m_hwndTooltip && IsWindowVisible(m_hwndTooltip))
+	if (CEditWndEx::m_hwndTooltip && IsWindowVisible(m_hwndTooltip) &&
+		m_plast == m_pOwner)
+	{
 		return;
+	}
+		
 	::ZeroMemory(&m_ToolTip, sizeof(TOOLINFO));
 	m_ToolTip.cbSize = sizeof(TOOLINFO);
-	m_ToolTip.uFlags = TTF_IDISHWND;
+	m_ToolTip.uFlags = TTF_IDISHWND | TTF_ABSOLUTE;
 	m_ToolTip.hwnd = m_pOwner ? m_pOwner->GetManager()->GetPaintWindow() : m_hWnd;
 	m_ToolTip.uId = (UINT_PTR)m_ToolTip.hwnd;
 	m_ToolTip.hinst = CPaintManagerUI::GetInstance();
@@ -278,21 +287,28 @@ void CEditWndEx::ShowToolTip(LPCWSTR strInfo)
 		m_hwndTooltip = ::CreateWindowEx(0, TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP |TTS_BALLOON, 
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
 			m_ToolTip.hwnd, NULL, m_ToolTip.hinst, NULL);
-		SetWindowPos(m_hwndTooltip, HWND_NOTOPMOST, m_ToolTip.rect.left, m_ToolTip.rect.top, 0, 0, SWP_NOSIZE);
 		::SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&m_ToolTip);
 	}
 	::SendMessage(m_hwndTooltip, TTM_SETMAXTIPWIDTH, 0, 200);
 	::SendMessage(m_hwndTooltip, TTM_SETTOOLINFO, 0, (LPARAM)&m_ToolTip);
+
 	::SendMessage(m_hwndTooltip, TTM_TRACKACTIVATE, TRUE, (LPARAM)&m_ToolTip);
 	POINT pt = { m_ToolTip.rect.left, m_ToolTip.rect.top };
 	ClientToScreen(m_ToolTip.hwnd, &pt);
 	MoveWindow(m_hwndTooltip, pt.x + 30, pt.y - 45, 200, 50, true);
+
+	
 }
 
 void CEditWndEx::HideToolTip()
 {
-	if (m_hwndTooltip != NULL) 
+	if (m_hwndTooltip != NULL)
+	{
+		::ShowWindow(m_hwndTooltip, false);
 		::SendMessage(m_hwndTooltip, TTM_TRACKACTIVATE, FALSE, (LPARAM)&m_ToolTip);
+		m_plast = nullptr;
+	}
+		
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
