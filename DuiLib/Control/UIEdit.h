@@ -33,7 +33,7 @@ namespace DuiLib
 		void SetNumberOnly(bool bNumberOnly);
 		bool IsNumberOnly() const;
 		int GetWindowStyls() const;
-		HWND GetNativeEditHWND() const;
+		virtual HWND GetNativeEditHWND() const;//ÐÞ¸ÄÎªÐéº¯Êý
 
 		LPCTSTR GetNormalImage();
 		void SetNormalImage(LPCTSTR pStrImage);

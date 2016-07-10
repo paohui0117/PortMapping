@@ -19,6 +19,9 @@
     <Filter Include="listitem">
       <UniqueIdentifier>{c8c2687b-b9c7-4a27-8374-97c9a2ae62d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EditEx">
+      <UniqueIdentifier>{901dd51b-fd14-4510-ab91-94e9be45628b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -51,6 +54,9 @@
     <ClInclude Include="MyListItem.h">
       <Filter>listitem</Filter>
     </ClInclude>
+    <ClInclude Include="EditUIEx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -70,6 +76,9 @@
     </ClCompile>
     <ClCompile Include="MyListItem.cpp">
       <Filter>listitem</Filter>
+    </ClCompile>
+    <ClCompile Include="EditUIEx.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

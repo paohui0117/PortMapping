@@ -1,6 +1,7 @@
 #pragma once
 #include "UIMenu.h"
 #include "LibuvAdapter.h"
+#include "EditUIEx.h"
 
 using namespace DuiLib;
 class CMainDlg : public WindowImplBase
@@ -14,6 +15,7 @@ protected:
 	virtual CDuiString GetSkinFolder();//设置资源文件夹
 	virtual CDuiString GetSkinFile();//设置资源文件
 	virtual LPCTSTR GetWindowClassName(void) const;//注册用的窗口类名
+	virtual CControlUI* CreateControl(LPCTSTR pstrClass)  override;
 public:
 	//重写基类虚函数
 	virtual void InitWindow() override;//在OnCreate最后调用
@@ -25,6 +27,7 @@ private:
 	bool ButtonNotify(void* pNotify);//按钮Notify消息
 	bool ListNotify(void* pNotify);//列表Notify消息
 	bool ListItemNotify(void* p);
+	bool CheckEditContent(void* p);
 
 	void OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param);
 	void OnMenuItemClick(LPCWSTR pName, LPARAM l_param);
@@ -38,6 +41,8 @@ private:
 
 	CListUI* m_pMapping_List;		//映射关系列表
 	CListUI* m_pConnect_List;		//链接信息列表
+
+	CEditUIEx*	m_pEdit_port;
 
 };
 

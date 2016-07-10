@@ -148,6 +148,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EditUIEx.h" />
     <ClInclude Include="LibuvAdapter.h" />
     <ClInclude Include="MainDlg.h" />
     <ClInclude Include="MyListItem.h" />
@@ -159,8 +160,9 @@
     <ClInclude Include="UIMenu.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="EditUIEx.cpp" />
     <ClCompile Include="LibuvAdapter.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MainDlg.cpp" />
     <ClCompile Include="MyListItem.cpp" />

@@ -2,9 +2,12 @@
 #include "MainDlg.h"
 #include "MyListItem.h"
 #include "UIMenu.h"
+#include "EditUIEx.h"
+
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
-	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr)
+	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr),
+	m_pEdit_port(nullptr)
 {
 }
 
@@ -28,6 +31,15 @@ LPCTSTR CMainDlg::GetWindowClassName(void) const
 	return L"CMainDlg_Duilib";
 }
 
+CControlUI* CMainDlg::CreateControl(LPCTSTR pstrClass)
+{
+	if (wcsncmp(pstrClass, DUI_CTR_EDITEX, wcslen(pstrClass)) == 0)
+	{
+		return new CEditUIEx;
+	}
+	return nullptr;
+}
+
 void CMainDlg::InitWindow()
 {
 	//获取控件指针
@@ -38,7 +50,6 @@ void CMainDlg::InitWindow()
 		m_pLeft_hide = static_cast<CButtonUI*>(pCur);
 		m_pLeft_hide->OnNotify += MakeDelegate(this, &CMainDlg::ButtonNotify);
 	}
-
 
 	pCur = m_PaintManager.FindSubControlByName(nullptr, L"btn_bottom");
 	if (pCur->GetInterface(DUI_CTR_BUTTON))
@@ -69,11 +80,40 @@ void CMainDlg::InitWindow()
 	}
 	m_pLeft_layout = m_PaintManager.FindSubControlByName(nullptr, L"left_layout");
 
+	pCur = m_PaintManager.FindSubControlByName(m_pLeft_layout, L"local_port");
+	if (pCur->GetInterface(DUI_CTR_EDITEX))
+	{
+		m_pEdit_port = static_cast<CEditUIEx*>(pCur);
+		m_pEdit_port->OnCheck += MakeDelegate(this, &CMainDlg::CheckEditContent);
+		m_pEdit_port->SetText(m_pEdit_port->GetText());
+	}
 	if (m_PaintManager.GetRoot())
 	{
 		m_PaintManager.GetRoot()->OnNotify += MakeDelegate(this, &CMainDlg::RootNotify);
 	}
 	Test();
+}
+bool CMainDlg::CheckEditContent(void* p)
+{
+	CheckInfo* pInfo = (CheckInfo*)p;
+	if (!pInfo)
+		return true;
+	for (size_t i = 0; i < pInfo->m_content.GetLength(); i++)
+	{
+		if (pInfo->m_content[i] < '0' || pInfo->m_content[i] > '9')
+		{
+			pInfo->m_waring_info = L"端口应该为1-65535";
+			return false;
+		}
+			
+	}
+	int nport = _wtoi(pInfo->m_content);
+	if (nport < 1 || nport > 65535)
+	{
+		pInfo->m_waring_info = L"端口应该为1-65535";
+		return false;
+	}
+	return true;
 }
 bool CMainDlg::RootNotify(void* p)
 {

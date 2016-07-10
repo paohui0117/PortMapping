@@ -369,14 +369,14 @@ namespace DuiLib
 	void CEditUI::SetText(LPCTSTR pstrText)
 	{
 		m_sText = pstrText;
-		if( m_pWindow != NULL ) Edit_SetText(*m_pWindow, m_sText);
+		if(GetNativeWindow() != NULL ) Edit_SetText(GetNativeWindow(), m_sText);
 		Invalidate();
 	}
 
 	void CEditUI::SetMaxChar(UINT uMax)
 	{
 		m_uMaxChar = uMax;
-		if( m_pWindow != NULL ) Edit_LimitText(*m_pWindow, m_uMaxChar);
+		if(GetNativeWindow() != NULL ) Edit_LimitText(GetNativeWindow(), m_uMaxChar);
 	}
 
 	UINT CEditUI::GetMaxChar()
@@ -389,7 +389,7 @@ namespace DuiLib
 		if( m_bReadOnly == bReadOnly ) return;
 
 		m_bReadOnly = bReadOnly;
-		if( m_pWindow != NULL ) Edit_SetReadOnly(*m_pWindow, m_bReadOnly);
+		if(GetNativeWindow() != NULL ) Edit_SetReadOnly(GetNativeWindow(), m_bReadOnly);
 		Invalidate();
 	}
 
@@ -442,7 +442,7 @@ namespace DuiLib
 	{
 		if( m_cPasswordChar == cPasswordChar ) return;
 		m_cPasswordChar = cPasswordChar;
-		if( m_pWindow != NULL ) Edit_SetPasswordChar(*m_pWindow, m_cPasswordChar);
+		if(GetNativeWindow() != NULL ) Edit_SetPasswordChar(GetNativeWindow(), m_cPasswordChar);
 		Invalidate();
 	}
 
@@ -525,7 +525,7 @@ namespace DuiLib
 
 	void CEditUI::SetSel(long nStartChar, long nEndChar)
 	{
-		if( m_pWindow != NULL ) Edit_SetSel(*m_pWindow, nStartChar,nEndChar);
+		if(GetNativeWindow() != NULL ) Edit_SetSel(GetNativeWindow(), nStartChar,nEndChar);
 	}
 
 	void CEditUI::SetSelAll()
@@ -535,7 +535,7 @@ namespace DuiLib
 
 	void CEditUI::SetReplaceSel(LPCTSTR lpszReplace)
 	{
-		if( m_pWindow != NULL ) Edit_ReplaceSel(*m_pWindow, lpszReplace);
+		if(GetNativeWindow() != NULL ) Edit_ReplaceSel(GetNativeWindow(), lpszReplace);
 	}
 
 	void CEditUI::SetPos(RECT rc, bool bNeedInvalidate)
@@ -561,12 +561,12 @@ namespace DuiLib
 	void CEditUI::SetVisible(bool bVisible)
 	{
 		CControlUI::SetVisible(bVisible);
-		if( !IsVisible() && m_pWindow != NULL ) m_pManager->SetFocus(NULL);
+		if( !IsVisible() && GetNativeWindow() != NULL ) m_pManager->SetFocus(NULL);
 	}
 
 	void CEditUI::SetInternVisible(bool bVisible)
 	{
-		if( !IsVisible() && m_pWindow != NULL ) m_pManager->SetFocus(NULL);
+		if( !IsVisible() && GetNativeWindow() != NULL ) m_pManager->SetFocus(NULL);
 	}
 
 	SIZE CEditUI::EstimateSize(SIZE szAvailable)

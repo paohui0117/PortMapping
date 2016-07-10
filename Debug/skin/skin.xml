@@ -27,7 +27,7 @@
         <Combo name="local_ip" height="19" normalimage="file='Combo_nor.bmp'" pushedimage="file='Combo_over.bmp'" />
         
         <Label text="本地端口:" height="20"  />
-        <Edit name="local_port" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
+        <EditEx name="local_port"  maxchar="5" text="000" waring="true" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
         
         <Label text="映射IP:" height="40" padding="0,20,0,0" />
         <Edit name="mapping_ip" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
