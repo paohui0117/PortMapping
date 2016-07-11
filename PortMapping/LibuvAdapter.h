@@ -71,6 +71,8 @@ struct Connectkey
 		return false;
 	}
 };
+wstring a2w(const char* str);
+string w2a(LPCWSTR* str);
 class CLibuvAdapter
 {
 public:
@@ -93,6 +95,6 @@ private:
 	uv_check_t		m_check_keeprun;
 	//data:
 	map<USHORT, MappingInfo>	m_mapMapping;
-	map<Connectkey, ConnectInfo> m_mapConnect;
+	map<USHORT, map<Connectkey, ConnectInfo>> m_mapConnect;
 };
 

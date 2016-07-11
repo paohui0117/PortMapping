@@ -368,17 +368,17 @@ void CMappingListItem::InitStringList(const DuiLib::CDuiString& strAgentIP, cons
 	AddText(strServerPort);
 }
 
-bool CMappingListItem::Start(bool bSelect)
+bool CMappingListItem::Start()
 {
 	return false;
 }
 
-bool CMappingListItem::Stop(bool bSelect)
+bool CMappingListItem::Stop()
 {
 	return false;
 }
 
-bool CMappingListItem::Delete(bool bSelect)
+bool CMappingListItem::Delete()
 {
 	return false;
 }
@@ -406,4 +406,79 @@ void CMappingListItem::Updata(bool bforce)
 	//服务端发送   server——>agent——>client
 	str = GetFlowString(m_pInfo->nTotalFromServerM, m_pInfo->nTotalFromServerB);
 	SetText(8, str);
+}
+//////////////////////////////////////////////////////////////////////////
+CConnectListItem::CConnectListItem(ConnectInfo* pInfo)
+{
+	m_pInfo = pInfo;
+}
+
+CConnectListItem::~CConnectListItem()
+{
+}
+
+void CConnectListItem::DoInit()
+{
+	if (!m_pInfo || !m_pInfo->pMapping)
+		return;
+	CDuiString str;
+	char ip[50] = { 0 };
+	int nport;
+	//client IP
+	uv_ip4_name(&m_pInfo->Addr_Client, ip, 50);
+	AddText(a2w(ip).c_str());
+	//client port
+	nport = htons(m_pInfo->Addr_Client.sin_port);
+	str.Format(L"%d", nport);
+	AddText(str);
+	//agent ip
+	uv_ip4_name(&m_pInfo->pMapping->Addr_agent, ip, 50);
+	AddText(a2w(ip).c_str());
+	//agent port
+	nport = htons(m_pInfo->pMapping->Addr_agent.sin_port);
+	str.Format(L"%d", nport);
+	AddText(str);
+	//server ip
+	uv_ip4_name(&m_pInfo->pMapping->Addr_server, ip, 50);
+	AddText(a2w(ip).c_str());
+	//server port
+	nport = htons(m_pInfo->pMapping->Addr_server.sin_port);
+	str.Format(L"%d", nport);
+	AddText(str);
+	//
+	//客户发送   client——>agent——>server
+	str = GetFlowString(m_pInfo->nCurFromClientM, m_pInfo->nCurFromClientB);
+	AddText(str);
+	//服务端发送   server——>agent——>client
+	str = GetFlowString(m_pInfo->nCurFromServerM, m_pInfo->nCurFromServerB);
+	AddText(str);
+}
+
+LPCTSTR CConnectListItem::GetClass() const
+{
+	return L"ConnectListItem";
+}
+
+LPVOID CConnectListItem::GetInterface(LPCTSTR pstrName)
+{
+	if (_tcscmp(pstrName, DUI_CTR_CONNECTLISTITEM) == 0) return static_cast<CConnectListItem*>(this);
+	return CMyListItem::GetInterface(pstrName);
+}
+
+bool CConnectListItem::Delete()
+{
+	return true;
+}
+
+void CConnectListItem::Updata(bool bforce)
+{
+	if (!m_pInfo || !m_pInfo->pMapping)
+		return;
+	CDuiString str;
+	//客户发送   client——>agent——>server
+	str = GetFlowString(m_pInfo->nCurFromClientM, m_pInfo->nCurFromClientB);
+	SetText(6, str);
+	//服务端发送   server——>agent——>client
+	str = GetFlowString(m_pInfo->nCurFromServerM, m_pInfo->nCurFromServerB);
+	AddText(7, str);
 }

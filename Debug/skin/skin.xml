@@ -88,7 +88,6 @@
             <ListHeaderItem text="本地端口" width="80" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="映射IP" width="100" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="映射端口" width="80" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
-            <ListHeaderItem text="类型" width="80" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="客户发送" width="120" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <ListHeaderItem text="客户接收" width="120" sepimage="sepimage.png" hotimage="list_header_hot.png" pushedimage="list_header_pushed.png"/>
             <!--表头的checkbox-->

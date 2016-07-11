@@ -239,6 +239,18 @@ void CMainDlg::UpDataList()
 		if (pMapLiem)
 			pMapLiem->Updata();
 	}
+	if (!m_pConnect_List)
+		return;
+	CConnectListItem* pConnectItem = nullptr;
+	for (size_t i = 0; i < m_pConnect_List->GetCount(); i++)
+	{
+		pCtrl = m_pConnect_List->GetItemAt(i);
+		if (!pCtrl)
+			continue;
+		pConnectItem = static_cast<CConnectListItem *>(pCtrl->GetInterface(DUI_CTR_CONNECTLISTITEM));
+		if (pConnectItem)
+			pConnectItem->Updata();
+	}
 }
 
 LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

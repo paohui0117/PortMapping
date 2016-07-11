@@ -1,6 +1,7 @@
 #pragma once
 #define DUI_CTR_MYLISTITEM L"MyListItem"
 #define DUI_CTR_MAPPINGLISTITEM L"MappingListItem"
+#define DUI_CTR_CONNECTLISTITEM L"ConnectListItem"
 #include "LibuvAdapter.h"
 class CMyListItem : public DuiLib::CListContainerElementUI
 {
@@ -36,7 +37,7 @@ private:
 	int						m_nClictFont;
 	DuiLib::CCheckBoxUI*    m_pCheck_box;
 };
-
+//映射列表项
 class CMappingListItem : public CMyListItem
 {
 public:
@@ -48,10 +49,27 @@ public:
 	virtual LPVOID GetInterface(LPCTSTR pstrName) override;
 	void InitStringList(const DuiLib::CDuiString& strAgentIP, const DuiLib::CDuiString& strAgentPort,
 		const DuiLib::CDuiString& strServerIP, const DuiLib::CDuiString& strServerPort);
-	bool Start(bool bSelect = false);
-	bool Stop(bool bSelect = false);
-	bool Delete(bool bSelect = false);
+	bool Start();
+	bool Stop();
+	bool Delete();
 	void Updata(bool bforce = false);		//bforce  是否强制刷新
 private:
 	MappingInfo*		m_pInfo;
+};
+
+//连接列表项
+class CConnectListItem : public CMyListItem
+{
+public:
+	CConnectListItem(ConnectInfo* pInfo);
+	virtual ~CConnectListItem();
+public:
+	virtual void DoInit() override;
+	virtual LPCTSTR GetClass() const override;
+	virtual LPVOID GetInterface(LPCTSTR pstrName) override;
+	
+	bool Delete();
+	void Updata(bool bforce = false);		//bforce  是否强制刷新
+private:
+	ConnectInfo*		m_pInfo;
 };
