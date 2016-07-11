@@ -2,6 +2,22 @@
 #include "MyListItem.h"
 using namespace DuiLib;
 
+CDuiString GetFlowString(UINT32 nM, UINT32 nB)
+{
+	CDuiString str;
+	UINT cur1 = nM >> 10; //G
+	UINT cur2 = nB >> 10; //KB
+	if (cur1 > 0)
+		str.Format(L"%udG,%udM,%udKB", cur1, nM & 0x3ff, cur2);
+	else if (nM > 0)
+		str.Format(L"%udM,%udKB,%udB", nM, cur2, nB & 0x3ff);
+	else if (cur2 > 0)
+		str.Format(L"%udKB,%udB", cur2, nB & 0x3ff);
+	else
+		str.Format(L"%udB", nB);
+	return str;
+}
+
 struct ListItemText
 {
 	CDuiString	strData;	//内容
@@ -26,7 +42,7 @@ LPCTSTR CMyListItem::GetClass() const
 
 LPVOID CMyListItem::GetInterface(LPCTSTR pstrName)
 {
-	if (_tcscmp(pstrName, DUI_CTR_LISTLABELELEMENT) == 0) return static_cast<CMyListItem*>(this);
+	if (_tcscmp(pstrName, DUI_CTR_MYLISTITEM) == 0) return static_cast<CMyListItem*>(this);
 	return CListContainerElementUI::GetInterface(pstrName);
 }
 
@@ -121,6 +137,8 @@ void CMyListItem::DrawItemText(HDC hDC, const RECT& rcItem)
 	ListItemText* curData = nullptr;
 	for (size_t i = 0; i < pInfo->nColumns && i < m_text_array.GetSize(); i++)
 	{
+		iTextColor = pInfo->dwTextColor;
+		nFont = pInfo->nFont;
 		//循环画每一列的内容文字
 		curRect = pInfo->rcColumn[i];
 		curRect.top = rcItem.top;
@@ -150,7 +168,6 @@ void CMyListItem::DrawItemText(HDC hDC, const RECT& rcItem)
 			if (m_nClictFont != -1)
 				nFont = m_nClictFont;
 			GetTextRect(i, curData->pRc, rcItem);
-
 		}
 			
 		if (pInfo->bShowHtml)
@@ -331,6 +348,17 @@ void CMappingListItem::DoInit()
 	AddText(L"0B");
 }
 
+LPCTSTR CMappingListItem::GetClass() const
+{
+	return L"MappingListItem";
+}
+
+LPVOID CMappingListItem::GetInterface(LPCTSTR pstrName)
+{
+	if (_tcscmp(pstrName, DUI_CTR_MAPPINGLISTITEM) == 0) return static_cast<CMyListItem*>(this);
+	return CMyListItem::GetInterface(pstrName);
+}
+
 void CMappingListItem::InitStringList(const DuiLib::CDuiString& strAgentIP, const DuiLib::CDuiString& strAgentPort,const DuiLib::CDuiString& strServerIP, const DuiLib::CDuiString& strServerPort)
 {
 	ClearText();
@@ -355,6 +383,27 @@ bool CMappingListItem::Delete(bool bSelect)
 	return false;
 }
 
-void CMappingListItem::Updata()
+void CMappingListItem::Updata(bool bforce)
 {
+	if (!m_pInfo)
+		return;
+	if (!bforce && m_pInfo->nState == 0)
+		return;
+	//状态
+	if (m_pInfo->nState == 0 )
+		SetText(4, L"停止");
+	else if (m_pInfo->nState & MAPPING_START)
+		SetText(4, L"开始");
+	else if (m_pInfo->nState & MAPPING_FAIL)
+		SetText(4, L"出错");
+	//数量
+	CDuiString str;
+	str.Format(L"%d", m_pInfo->nConnect);
+	SetText(5, str);
+	//客户发送   client——>agent——>server
+	str = GetFlowString(m_pInfo->nTotalFromClientM, m_pInfo->nTotalFromClientB);
+	SetText(7, str);
+	//服务端发送   server——>agent——>client
+	str = GetFlowString(m_pInfo->nTotalFromServerM, m_pInfo->nTotalFromServerB);
+	SetText(8, str);
 }

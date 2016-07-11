@@ -1,5 +1,6 @@
 #pragma once
 #define DUI_CTR_MYLISTITEM L"MyListItem"
+#define DUI_CTR_MAPPINGLISTITEM L"MappingListItem"
 #include "LibuvAdapter.h"
 class CMyListItem : public DuiLib::CListContainerElementUI
 {
@@ -43,12 +44,14 @@ public:
 	virtual ~CMappingListItem();
 public:
 	virtual void DoInit() override;
+	virtual LPCTSTR GetClass() const override;
+	virtual LPVOID GetInterface(LPCTSTR pstrName) override;
 	void InitStringList(const DuiLib::CDuiString& strAgentIP, const DuiLib::CDuiString& strAgentPort,
 		const DuiLib::CDuiString& strServerIP, const DuiLib::CDuiString& strServerPort);
 	bool Start(bool bSelect = false);
 	bool Stop(bool bSelect = false);
 	bool Delete(bool bSelect = false);
-	void Updata();
+	void Updata(bool bforce = false);		//bforce  是否强制刷新
 private:
 	MappingInfo*		m_pInfo;
 };

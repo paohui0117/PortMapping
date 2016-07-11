@@ -499,6 +499,15 @@ void CEditUIEx::SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue)
 	CEditUI::SetAttribute(pstrName, pstrValue);
 }
 
+void CEditUIEx::SetInternVisible(bool bVisible)
+{
+	CControlUI::SetInternVisible(bVisible);
+	if (!bVisible)
+	{
+		::SetFocus(m_pManager->GetPaintWindow());
+	}
+}
+
 bool CEditUIEx::CheckContent()
 {
 	if (!OnCheck)

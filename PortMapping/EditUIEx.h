@@ -21,6 +21,7 @@ public:
 	virtual void SetPos(RECT rc, bool bNeedInvalidate = true) override;
 	virtual void Move(SIZE szOffset, bool bNeedInvalidate = true) override;
 	virtual void SetAttribute(LPCTSTR pstrName, LPCTSTR pstrValue) override;
+	virtual void SetInternVisible(bool bVisible = true) override;
 public:
 	void SetShowWaring(bool bWaring = true) { m_bShowWaring = bWaring; };
 	static void SetWaringColor(DWORD nCol) { CEditUIEx::m_nWaringCol = nCol; };

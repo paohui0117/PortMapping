@@ -63,8 +63,14 @@ MappingInfo* CLibuvAdapter::AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort,
 
 	strIP = w2a(strServerIP);
 	USHORT nServerPort = _wtoi(strServerPort);
-	uv_ip4_addr(strIP.c_str(), nAgentPort, &curInfp.Addr_server);
-
+	uv_ip4_addr(strIP.c_str(), nServerPort, &curInfp.Addr_server);
+	if (curInfp.Addr_agent.sin_addr.S_un.S_addr == curInfp.Addr_server.sin_addr.S_un.S_addr && 
+		curInfp.Addr_agent.sin_port == curInfp.Addr_server.sin_port)
+	{
+		err = 2;//映射对象与本地对象相同
+		m_mapMapping.erase(nAgentPort);
+		return nullptr;
+	}
 	return &curInfp;
 }
 

@@ -1,13 +1,14 @@
 ﻿#include "stdafx.h"
 #include "MainDlg.h"
-#include "MyListItem.h"
 #include "UIMenu.h"
 #include "EditUIEx.h"
+#define MAIN_UPDATA_TIMER 1234
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr),
 	m_pEdit_agent_port(nullptr), m_pEdit_server_port(nullptr), m_pEdit_server_ip(nullptr),
-	m_pCmb_protocol(nullptr), m_pBtn_ADD(nullptr)
+	m_pCmb_protocol(nullptr), m_pBtn_ADD(nullptr), m_pCur_mapping(nullptr),
+	m_pCmb_agent_ip(nullptr)
 {
 	m_pLibuv = new CLibuvAdapter;
 	m_pregex_IP = new wregex(L"^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)($|(?!\\.$)\\.)){4}$");
@@ -131,9 +132,9 @@ void CMainDlg::InitWindow()
 	if (m_PaintManager.GetRoot())
 	{
 		m_PaintManager.GetRoot()->OnNotify += MakeDelegate(this, &CMainDlg::RootNotify);
+		m_PaintManager.SetTimer(m_PaintManager.GetRoot(), MAIN_UPDATA_TIMER, 600);
 	}
 	
-	Test();
 }
 bool CMainDlg::CheckPort(void* p)
 {
@@ -205,6 +206,11 @@ bool CMainDlg::RootNotify(void* p)
 	{
 		OnMenuItemClick(LPCWSTR(pNotify->wParam), pNotify->lParam);
 	}
+	else if (pNotify->sType == DUI_MSGTYPE_TIMER)
+	{
+		if (MAIN_UPDATA_TIMER == pNotify->wParam)
+			UpDataList();
+	}
 	return false;
 }
 LRESULT CMainDlg::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& bHandled)
@@ -216,6 +222,23 @@ LRESULT CMainDlg::MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, bool& 
 		return S_OK;
 	}
 	return WindowImplBase::MessageHandler(uMsg, wParam, lParam, bHandled);
+}
+
+void CMainDlg::UpDataList()
+{
+	if (!m_pMapping_List)
+		return;
+	CControlUI* pCtrl = nullptr;
+	CMappingListItem *pMapLiem = nullptr;
+	for (size_t i = 0; i < m_pMapping_List->GetCount(); i++)
+	{
+		pCtrl = m_pMapping_List->GetItemAt(i);
+		if (!pCtrl)
+			continue;
+		pMapLiem = static_cast<CMappingListItem *>(pCtrl->GetInterface(DUI_CTR_MAPPINGLISTITEM));
+		if (pMapLiem)
+			pMapLiem->Updata();
+	}
 }
 
 LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -245,9 +268,39 @@ void CMainDlg::OnMenuItemClick(LPCWSTR pName, LPARAM l_param)
 	int a = 10;
 }
 
+
+
 void CMainDlg::OnAddClick()
 {
-	
+	if (!m_pLibuv)
+		return;
+	CDuiString strAgentIP = m_pCmb_agent_ip->GetText();
+	CDuiString strServerIP = m_pEdit_server_ip->GetText();
+	CDuiString strAgentPort = m_pEdit_agent_port->GetText();
+	CDuiString strServerPort = m_pEdit_server_port->GetText();
+	CDuiString strProtocol = m_pCmb_protocol->GetText();
+	bool bTcp = strProtocol == L"TCP";
+	int nerr = 0;
+	MappingInfo* pInfo = m_pLibuv->AddMapping(strAgentIP, strAgentPort, strServerIP, strServerPort,
+		bTcp, nerr);
+	if (nerr == 1)
+	{
+		MessageBox(m_hWnd, L"映射已经存在", L"提示", MB_OK);
+		return;
+	}
+	else if (nerr == 2)
+	{
+		MessageBox(m_hWnd, L"本地地址与映射地址不能相同！", L"提示", MB_OK);
+		return;
+	}
+	else if (nerr == 0)
+	{
+		CMappingListItem* pItem = new CMappingListItem(pInfo);
+		pItem->InitStringList(strAgentIP, strAgentPort, strServerIP, strServerPort);
+		pItem->SetClickTextFont(2);
+		pItem->OnNotify += MakeDelegate(this, &CMainDlg::ListItemNotify);
+		m_pMapping_List->Add(pItem);
+	}
 }
 
 bool CMainDlg::CheckAllInfo()
@@ -312,12 +365,13 @@ bool CMainDlg::ListNotify(void* pNotify)
 	return true;
 }
 
-void CMainDlg::Test()
+void CMainDlg::UpDataConnectList(CControlUI* p_sender)
 {
-	CMappingListItem* pItem = new CMappingListItem(nullptr);
-	pItem->InitStringList(L"192.168.1.101", L"1234", L"192.168.1.101", L"3214");
-	m_pMapping_List->Add(pItem);
+	m_pCur_mapping = static_cast<CMappingListItem*>(p_sender->GetInterface(DUI_CTR_MAPPINGLISTITEM));
+	if (!m_pCur_mapping)
+		return;
 }
+
 bool CMainDlg::ListItemNotify(void* p)
 {
 	TNotifyUI* pNotify = (TNotifyUI*)p;
@@ -326,6 +380,10 @@ bool CMainDlg::ListItemNotify(void* p)
 	if (pNotify->wParam != -1 && pNotify->sType == DUI_MSGTYPE_ITEMCLICK)
 	{
 		m_pConnect_List->SetVisible(true);
+		if (m_pCur_mapping != pNotify->pSender)
+		{
+			UpDataConnectList(pNotify->pSender);
+		}
 		m_pBottom_hide->SetText(L"▼" );
 	}
 	return false;

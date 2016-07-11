@@ -3,6 +3,7 @@
 #include "LibuvAdapter.h"
 #include "EditUIEx.h"
 #include <regex>
+#include "MyListItem.h"
 
 using namespace DuiLib;
 class CMainDlg : public WindowImplBase
@@ -25,20 +26,24 @@ public:
 	virtual LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, bool& bHandled) override;
 	virtual LRESULT HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) override;
 private:
-	bool RootNotify(void* p);
+	void UpDataList();
+	bool RootNotify(void* p);	//用来处理菜单消息
 	
 	bool ButtonNotify(void* pNotify);//按钮Notify消息
-	bool ListNotify(void* pNotify);//列表Notify消息
-	bool ListItemNotify(void* p);
-	bool CheckPort(void* p);
-	bool CheckIP(void* p);
+	bool ListNotify(void* pNotify);
+	void UpDataConnectList(CControlUI* p_sender);	//刷新连接列表
+	//列表Notify消息
+	bool ListItemNotify(void* p);	//处理列表项单击消息
+	bool CheckPort(void* p);		//检测端口
+	bool CheckIP(void* p);			//检测IP
 
-	void GetLocalIP();
-	void OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param);
-	void OnMenuItemClick(LPCWSTR pName, LPARAM l_param);
-	void OnAddClick();
-	bool CheckAllInfo();
-	void Test();
+	void GetLocalIP();				//获取本地IP
+	void OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param);	//菜单初始化，在弹出之前调用
+	void OnMenuItemClick(LPCWSTR pName, LPARAM l_param);			//菜单项单击
+	
+	void OnAddClick();												//添加按钮单击
+	bool CheckAllInfo();											//检测所有输入的信息是否有效
+
 	
 private:
 	CButtonUI*	m_pLeft_hide;		//左边隐藏 显示按钮
@@ -49,19 +54,21 @@ private:
 	CListUI* m_pMapping_List;		//映射关系列表
 	CListUI* m_pConnect_List;		//链接信息列表
 
-	CEditUIEx*	m_pEdit_agent_port;
-	CEditUIEx*	m_pEdit_server_port;
+	CEditUIEx*	m_pEdit_agent_port;	//本地端口
+	CEditUIEx*	m_pEdit_server_port;//映射端口
 
-	CEditUIEx* m_pEdit_server_ip;
+	CEditUIEx* m_pEdit_server_ip;	//映射IP
 
-	CComboUI*	m_pCmb_protocol;
-	CComboUI*  m_pCmb_agent_ip;
+	CComboUI*	m_pCmb_protocol;	//协议类型
+	CComboUI*  m_pCmb_agent_ip;		//本地ip
 
-	CButtonUI*	m_pBtn_ADD;
+	CButtonUI*	m_pBtn_ADD;			//ADD按钮
 
-	vector<wstring>		m_vecLocalIP;
-	CLibuvAdapter*		m_pLibuv;
+	vector<wstring>		m_vecLocalIP;//本地IP
+	CLibuvAdapter*		m_pLibuv;	//调用libuv相关功能
 
-	wregex*				m_pregex_IP;
+	wregex*				m_pregex_IP;//ip判断的正则表达式
+
+	CMappingListItem*			m_pCur_mapping;
 };
 
