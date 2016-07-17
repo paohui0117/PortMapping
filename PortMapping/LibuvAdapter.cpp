@@ -96,7 +96,10 @@ public:
 			return;
 		}
 		//停止监听
-		uv_close((uv_handle_t*)&mapping_info->u.listen_tcp, tcp_listen_close_cb);
+		if (mapping_info->bTCP)
+			uv_close((uv_handle_t*)&mapping_info->u.listen_tcp, listen_close_cb);
+		else
+			uv_close((uv_handle_t*)&mapping_info->u.listen_udp, listen_close_cb);
 	}
 
 	//异步关闭一条连接
@@ -107,12 +110,21 @@ public:
 		ConnectInfo* pConInfo = (ConnectInfo*)(*(int*)((PCHAR)w + sizeof(uv__work)));
 		if (!pConInfo)
 			return;
-		//关闭本tcp handle
-		pConInfo->u.tcp.server_tcp.data = pConInfo;
-		uv_close((uv_handle_t*)&pConInfo->u.tcp.server_tcp, tcp_connect_close_cb);
-		//断开与客户端的链接
-		pConInfo->u.tcp.client_tcp.data = pConInfo;
-		uv_close((uv_handle_t*)&pConInfo->u.tcp.client_tcp, tcp_connect_close_cb);
+		if (pConInfo->pMapping->bTCP)
+		{
+			//关闭本tcp handle
+			pConInfo->u.tcp.server_tcp.data = pConInfo;
+			uv_close((uv_handle_t*)&pConInfo->u.tcp.server_tcp, tcp_connect_close_cb);
+			//断开与客户端的链接
+			pConInfo->u.tcp.client_tcp.data = pConInfo;
+			uv_close((uv_handle_t*)&pConInfo->u.tcp.client_tcp, tcp_connect_close_cb);
+		}
+		else
+		{
+			//关闭本tcp handle
+			uv_close((uv_handle_t*)&pConInfo->u.server_udp, udp_connect_close_cb);
+		}
+		
 	}
 
 	//libuv相关  TCP回调函数
@@ -123,7 +135,7 @@ public:
 		buf->len = suggested_size;
 	}
 
-	//监听接受到链接的回调
+	//监听接受到连接的回调
 	static void tcp_listen_connection_cb(uv_stream_t* server, int status)
 	{
 		if (!server)//error
@@ -133,6 +145,8 @@ public:
 			//改变状态
 			MappingInfo *pMapping = CONTAINING_RECORD(server, MappingInfo, u.listen_tcp);
 			pMapping->nState = MAPPING_FAIL | LISTEN_FAIL;
+			pMapping->u.listen_tcp.data = pMapping;
+			uv_close((uv_handle_t*)&pMapping->u.listen_tcp, listen_close_cb);
 			return;
 		}
 		//新建一个链接
@@ -179,7 +193,7 @@ public:
 		}
 		//成功了，将记录添加到对应的容器
 		CLibuvAdapter* pThis = (CLibuvAdapter*)pConInfo->pMapping->pLoop->data;
-		pThis->AddTCPConnect(pConInfo);
+		pThis->AddConnect(pConInfo);
 		//开始读取数据
 		pConInfo->u.tcp.server_tcp.data = pConInfo;
 		uv_read_start((uv_stream_t*)&pConInfo->u.tcp.server_tcp, alloc_cb, tcp_read_cb);
@@ -188,14 +202,15 @@ public:
 	}
 
 	//关闭监听的回调函数
-	static void tcp_listen_close_cb(uv_handle_t* handle)
+	static void listen_close_cb(uv_handle_t* handle)
 	{
-		MappingInfo* pMappingInfo = CONTAINING_RECORD(handle, MappingInfo, u.listen_tcp);
+		MappingInfo* pMappingInfo = (MappingInfo*)handle->data;
 		//关闭所有该端口上的连接
 		CLibuvAdapter* pThis = (CLibuvAdapter*)pMappingInfo->pLoop->data;
 		pThis->RemoveAllConnect(pMappingInfo);
 		//改变状态
-		pMappingInfo->nState = MAPPING_STOP;
+		pMappingInfo->nState |= MAPPING_STOP;
+		pMappingInfo->nState &= ~MAPPING_START;
 	}
 
 	//连接的关闭回调，
@@ -282,6 +297,8 @@ public:
 		if (nread < 0)//没有再继续接收了
 		{
 			mapping_info->nState = MAPPING_FAIL | LISTEN_FAIL;
+			mapping_info->u.listen_udp.data = mapping_info;
+			uv_close((uv_handle_t*)&mapping_info->u.listen_udp, listen_close_cb);
 			return;
 		}
 		//根据addr判断是否已记录了该链接
@@ -306,7 +323,7 @@ public:
 		ConnectInfo* pConnect = CONTAINING_RECORD(handle, ConnectInfo, u.server_udp);
 		if (nread < 0)//没有再继续接收了
 		{
-			uv_close((uv_handle_t*)&pConnect->u.server_udp, udp_close_cb);
+			uv_close((uv_handle_t*)&pConnect->u.server_udp, udp_connect_close_cb);
 			return;
 		}
 		//将受到的数据发送给client
@@ -321,7 +338,7 @@ public:
 		pConnect->pMapping->nTotalFromServerB &= 0x3ff;
 	}
 
-	static void udp_close_cb(uv_handle_t* handle)
+	static void udp_connect_close_cb(uv_handle_t* handle)
 	{
 		ConnectInfo* mapping_info = CONTAINING_RECORD(handle, ConnectInfo, u.server_udp);
 		if (mapping_info->bInMap)
@@ -355,7 +372,7 @@ wstring a2w(const char* str)//内存需要自己释放
 	return wstr;
 }
 
-string w2a(LPCWSTR* str)
+string w2a(LPCWSTR str)
 {
 	if (!str)
 		return "";
@@ -371,7 +388,7 @@ string w2a(LPCWSTR* str)
 }
 
 
-CLibuvAdapter::CLibuvAdapter() : m_pLoop(nullptr), m_Loop_thread(nullptr)
+CLibuvAdapter::CLibuvAdapter() : m_pLoop(nullptr), m_Loop_thread(nullptr), m_bRemoveAll(true)
 {
 	WSADATA wsa_data;
 	int errorno = WSAStartup(MAKEWORD(2, 2), &wsa_data);
@@ -385,7 +402,7 @@ CLibuvAdapter::~CLibuvAdapter()
 	WSACleanup();
 }
 
-const MappingInfo* CLibuvAdapter::AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort, LPCWSTR strServerIP, LPCWSTR strServerPort, bool bTcp, int& err)
+MappingInfo* CLibuvAdapter::AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort, LPCWSTR strServerIP, LPCWSTR strServerPort, bool bTcp, int& err)
 {
 	err = 0;
 	USHORT nAgentPort = _wtoi(strAgentPort);
@@ -503,7 +520,7 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 		//先通知外接
 		for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
 		{
-			(*it)->NotifyConnectMessage(DELETE_CONNECT, connect_info);
+			(*it)->NotifyConnectMessage(MSG_DELETE_CONNECT, connect_info);
 		}
 		itPort->second.erase(itAddr);
 		delete connect_info;
@@ -519,8 +536,6 @@ void CLibuvAdapter::AsyncOperate(void* p, AsyncWork workfun)
 
 	RegisterAnsycWork(pworkEx, workfun);
 }
-
-
 
 bool CLibuvAdapter::GetLocalIP(vector<wstring>& vecIP)
 {
@@ -564,8 +579,26 @@ bool CLibuvAdapter::RemoveNotify(INotifyLoop* p)
 	return true;
 }
 
+bool CLibuvAdapter::GetRemoveAllIfFail()
+{
+	return m_bRemoveAll;
+}
+
+void CLibuvAdapter::SetRemoveAllIfFail(bool b)
+{
+	m_bRemoveAll = b;
+}
+
 void CLibuvAdapter::RemoveAllConnect(MappingInfo* pMappingInfo)
 {
+	//通知
+	//先通知外接
+	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
+	{
+		(*it)->NotifyMappingMessage(MSG_LISTEN_FAIL, pMappingInfo);
+	}
+	if (!m_bRemoveAll)
+		return;
 	USHORT nPort = htons(pMappingInfo->Addr_agent.sin_port);
 	map<USHORT, map<Connectkey, ConnectInfo*>>::iterator itPort = m_mapConnect.find(nPort);
 	if (itPort == m_mapConnect.end())//没有记录
@@ -590,10 +623,10 @@ void CLibuvAdapter::RemoveAllConnect(MappingInfo* pMappingInfo)
 		for (; itAddr != itPort->second.end(); itAddr++)
 		{
 			ConnectInfo* pCurInfo = itAddr->second;
-			pCurInfo->u.tcp.client_tcp.data = pCurInfo;
+			pCurInfo->u.server_udp.data = pCurInfo;
 			pCurInfo->bInMap = false;		//不需要再一个一个的删除了，直接清空容器就可以了
 			uv_udp_recv_stop(&pCurInfo->u.server_udp);
-			
+			uv_close((uv_handle_t*)&pCurInfo->u.server_udp, IOCallBack::udp_connect_close_cb);
 		}
 	}
 	//清空记录
@@ -635,10 +668,15 @@ ConnectInfo* CLibuvAdapter::GetUDPConnect(MappingInfo* mapping_info, const socka
 	//开始接收
 	uv_udp_recv_start(&pinfo->u.server_udp, IOCallBack::alloc_cb, IOCallBack::udp_server_recv_cb);
 	itorPort->second.insert(pair<Connectkey, ConnectInfo*>(curKey, pinfo));
+	//先通知外接
+	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
+	{
+		(*it)->NotifyConnectMessage(MSG_DELETE_CONNECT, pinfo);
+	}
 	return pinfo;
 }
 
-void CLibuvAdapter::AddTCPConnect(ConnectInfo* connect_info)
+void CLibuvAdapter::AddConnect(ConnectInfo* connect_info)
 {
 	USHORT nPort = htons(connect_info->pMapping->Addr_agent.sin_port);
 	map<USHORT, map<Connectkey, ConnectInfo*>>::iterator itPort = m_mapConnect.find(nPort);
@@ -651,4 +689,9 @@ void CLibuvAdapter::AddTCPConnect(ConnectInfo* connect_info)
 	}
 	//有记录
 	auto ret = itPort->second[curKey] = connect_info;
+	//先通知外接
+	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
+	{
+		(*it)->NotifyConnectMessage(MSG_ADD_CONNECT, connect_info);
+	}
 }

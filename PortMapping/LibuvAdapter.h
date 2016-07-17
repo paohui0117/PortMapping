@@ -5,9 +5,9 @@
 
 using namespace std;
 //for  nState
-#define MAPPING_STOP	0x00000000
-#define MAPPING_START	0x00000001
-#define MAPPING_FAIL	0x00000002
+#define MAPPING_STOP	0x00000001
+#define MAPPING_START	0x00000002
+#define MAPPING_FAIL	0x00000004
 //
 #define INIT_FAIL		0x00000010
 #define BIND_FAIL		0x00000020
@@ -90,14 +90,17 @@ inline bool operator<(const Connectkey& A, const Connectkey& B)
 	return false;
 }
 wstring a2w(const char* str);
-string w2a(LPCWSTR* str);
+string w2a(LPCWSTR str);
 
-#define ADD_CONNECT		0x0000001
-#define DELETE_CONNECT	0x0000002
+#define MSG_ADD_CONNECT		0x0000001
+#define MSG_DELETE_CONNECT	0x0000002
+
+#define MSG_LISTEN_FAIL		0x0000004
 class INotifyLoop
 {
 public:
-	virtual void NotifyConnectMessage(UINT nType, ConnectInfo* pInfo) const = 0; //connect信息发生变化时的通知
+	virtual void NotifyConnectMessage(UINT nType, ConnectInfo* pInfo) = 0; //connect信息发生变化时的通知
+	virtual void NotifyMappingMessage(UINT nType, MappingInfo* pInfo) = 0; //映射信息发生变化
 };
 class IOCallBack;
 class CLibuvAdapter
@@ -107,7 +110,7 @@ public:
 	CLibuvAdapter();
 	virtual ~CLibuvAdapter();
 public:
-	const MappingInfo* AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort, LPCWSTR strServerIP, LPCWSTR strServerPort, bool bTcp, int& err);
+	MappingInfo* AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort, LPCWSTR strServerIP, LPCWSTR strServerPort, bool bTcp, int& err);
 	//开始一个映射
 	bool StartMapping(MappingInfo* pMapping);
 	//停止一个映射
@@ -120,7 +123,10 @@ public:
 	bool AddNotify(INotifyLoop* p);
 	//
 	bool RemoveNotify(INotifyLoop* p);
-	
+
+	bool GetRemoveAllIfFail();
+
+	void SetRemoveAllIfFail(bool b);
 private:
 	typedef void(*AsyncWork)(struct uv__work*, int);
 	bool InitLoop();	//初始化loop
@@ -129,15 +135,17 @@ private:
 	
 	void AsyncOperate(void* p, AsyncWork workfun);//异步处理用户的操作
 												  
-	void AddTCPConnect(ConnectInfo* connect_info);//添加一条记录
+	void AddConnect(ConnectInfo* connect_info);//添加一条记录
 	
 	void RemoveAllConnect(MappingInfo* pMappingInfo);//移除某一映射端口相关的全部链接
 
 	ConnectInfo* GetUDPConnect(MappingInfo* mapping_info, const sockaddr_in* addr);//获取对应的udp链接记录，没有就添加
+
+	
 public:
 	uv_loop_t*		m_pLoop;
 private:
-	
+	bool				m_bRemoveAll;		//当本地监听发生错误断开时，是否删除该映射的所有链接,默认为true
 	set<INotifyLoop*>	m_setNotify;
 
 	uv_thread_t		m_Loop_thread;
