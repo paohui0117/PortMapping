@@ -60,29 +60,24 @@ public:
 		if (!w)
 			return;
 		MappingInfo* mapping_info = (MappingInfo*)(*(int*)((PCHAR)w + sizeof(uv__work)));
+		free(w);
 		if (!mapping_info)
-		{
-			free(w);
 			return;
-		}
 		//初始化udp
 		if (uv_udp_init_ex(mapping_info->pLoop, &mapping_info->u.listen_udp, AF_INET) != 0)
 		{
 			mapping_info->nState = MAPPING_FAIL | INIT_FAIL;
-			free(w);
 			return;
 		}
 		//绑定
 		if (uv_udp_bind(&mapping_info->u.listen_udp, (sockaddr*)&mapping_info->Addr_agent, AF_INET) != 0)
 		{
 			mapping_info->nState = MAPPING_FAIL | BIND_FAIL;
-			free(w);
 			return;
 		}
 		//开始接收
 		uv_udp_recv_start(&mapping_info->u.listen_udp, alloc_cb, udp_listen_recv_cb);
 		mapping_info->nState = MAPPING_START;
-		free(w);
 	}
 	
 	//回调函数，异步关闭映射
@@ -91,17 +86,30 @@ public:
 		if (!w)
 			return;
 		MappingInfo* mapping_info = (MappingInfo*)(*(int*)((PCHAR)w + sizeof(uv__work)));
+		free(w);
 		if (!mapping_info)
 		{
-			free(w);
+			return;
+		}
+		//已经停止了
+		if (mapping_info->nState & MAPPING_START || mapping_info->nState & MAPPING_STOP)
+		{
+			if (mapping_info->nState & MAPPING_DELETING)//如果是需要移除的状态
+			{
+				CLibuvAdapter* pThis = (CLibuvAdapter*)mapping_info->pLoop->data;
+				pThis->_RemoveMapping(mapping_info);
+			}
 			return;
 		}
 		//停止监听
 		if (mapping_info->bTCP)
+		{
 			uv_close((uv_handle_t*)&mapping_info->u.listen_tcp, listen_close_cb);
+		}
 		else
+		{
 			uv_close((uv_handle_t*)&mapping_info->u.listen_udp, listen_close_cb);
-		free(w);
+		}
 	}
 
 	//异步关闭一条连接
@@ -110,6 +118,7 @@ public:
 		if (!w)
 			return;
 		ConnectInfo* pConInfo = (ConnectInfo*)(*(int*)((PCHAR)w + sizeof(uv__work)));
+		free(w);
 		if (!pConInfo)
 			return;
 		if (pConInfo->pMapping->bTCP)
@@ -443,7 +452,7 @@ bool CLibuvAdapter::StartMapping(MappingInfo* pMapping)
 {
 	if (!m_pLoop && !InitLoop())
 		return false;
-	if (!pMapping || pMapping->nState == MAPPING_START)
+	if (!pMapping || pMapping->nState == MAPPING_START || pMapping->nState & MAPPING_DELETING)
 		return false;
 	//工作线程已经开启，接下来的操作都是异步的
 	if (pMapping->bTCP)
@@ -457,7 +466,7 @@ bool CLibuvAdapter::StopMapping(MappingInfo* pMapping)
 {
 	if (!m_pLoop && !InitLoop())
 		return false;
-	if (!pMapping || pMapping->nState != MAPPING_START)
+	if (!pMapping || pMapping->nState != MAPPING_START || pMapping->nState & MAPPING_DELETING)
 		return false;
 	//工作线程已经开启，接下来的操作都是异步的
 	AsyncOperate(pMapping, IOCallBack::AnsycStopMapping);
@@ -468,7 +477,7 @@ bool CLibuvAdapter::RemoveMapping(MappingInfo* pMapping)
 {
 	if (!m_pLoop && !InitLoop())
 		return false;
-	if (!pMapping)
+	if (!pMapping || pMapping->nState & MAPPING_DELETING)
 		return false;
 	pMapping->nState |= MAPPING_DELETING;//改变状态
 	AsyncOperate(pMapping, IOCallBack::AnsycStopMapping);
@@ -512,6 +521,8 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 	{
 		if (!m_pLoop && !InitLoop())
 			return false;
+		if (!connect_info || connect_info->pMapping->nState & MAPPING_DELETING)
+			return false;
 		//工作线程已经开启，接下来的操作都是异步的
 		AsyncOperate(connect_info, IOCallBack::AnsycRemoveConnect);
 		return true;
@@ -542,7 +553,6 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 			(*it)->NotifyConnectMessage(MSG_DELETE_CONNECT, connect_info);
 		}
 		itPort->second.erase(itAddr);
-		delete connect_info;
 		return true;
 	}
 }
@@ -691,10 +701,10 @@ ConnectInfo* CLibuvAdapter::GetUDPConnect(MappingInfo* mapping_info, const socka
 	//开始接收
 	uv_udp_recv_start(&pinfo->u.server_udp, IOCallBack::alloc_cb, IOCallBack::udp_server_recv_cb);
 	itorPort->second.insert(pair<Connectkey, ConnectInfo*>(curKey, pinfo));
-	//先通知外接
+	//通知外接
 	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
 	{
-		(*it)->NotifyConnectMessage(MSG_DELETE_CONNECT, pinfo);
+		(*it)->NotifyConnectMessage(MSG_ADD_CONNECT, pinfo);
 	}
 	return pinfo;
 }
@@ -722,7 +732,7 @@ void CLibuvAdapter::AddConnect(ConnectInfo* connect_info)
 	}
 	//有记录
 	auto ret = itPort->second[curKey] = connect_info;
-	//先通知外接
+	//通知
 	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
 	{
 		(*it)->NotifyConnectMessage(MSG_ADD_CONNECT, connect_info);
