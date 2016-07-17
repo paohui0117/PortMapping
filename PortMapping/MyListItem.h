@@ -41,7 +41,7 @@ private:
 class CMappingListItem : public CMyListItem
 {
 public:
-	CMappingListItem(MappingInfo* pInfo);
+	CMappingListItem(const MappingInfo* pInfo);
 	virtual ~CMappingListItem();
 public:
 	virtual void DoInit() override;
@@ -54,7 +54,7 @@ public:
 	bool Delete();
 	void Updata(bool bforce = false);		//bforce  是否强制刷新
 private:
-	MappingInfo*		m_pInfo;
+	const MappingInfo*		m_pInfo;
 };
 
 //连接列表项

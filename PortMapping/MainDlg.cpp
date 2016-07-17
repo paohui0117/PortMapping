@@ -141,7 +141,7 @@ bool CMainDlg::CheckPort(void* p)
 	CheckInfo* pInfo = (CheckInfo*)p;
 	if (!pInfo)
 		return true;
-	for (size_t i = 0; i < pInfo->m_content.GetLength(); i++)
+	for (int i = 0; i < pInfo->m_content.GetLength(); i++)
 	{
 		if (pInfo->m_content[i] < '0' || pInfo->m_content[i] > '9')
 		{
@@ -230,7 +230,7 @@ void CMainDlg::UpDataList()
 		return;
 	CControlUI* pCtrl = nullptr;
 	CMappingListItem *pMapLiem = nullptr;
-	for (size_t i = 0; i < m_pMapping_List->GetCount(); i++)
+	for (int i = 0; i < m_pMapping_List->GetCount(); i++)
 	{
 		pCtrl = m_pMapping_List->GetItemAt(i);
 		if (!pCtrl)
@@ -242,7 +242,7 @@ void CMainDlg::UpDataList()
 	if (!m_pConnect_List)
 		return;
 	CConnectListItem* pConnectItem = nullptr;
-	for (size_t i = 0; i < m_pConnect_List->GetCount(); i++)
+	for (int i = 0; i < m_pConnect_List->GetCount(); i++)
 	{
 		pCtrl = m_pConnect_List->GetItemAt(i);
 		if (!pCtrl)
@@ -293,7 +293,7 @@ void CMainDlg::OnAddClick()
 	CDuiString strProtocol = m_pCmb_protocol->GetText();
 	bool bTcp = strProtocol == L"TCP";
 	int nerr = 0;
-	MappingInfo* pInfo = m_pLibuv->AddMapping(strAgentIP, strAgentPort, strServerIP, strServerPort,
+	const MappingInfo* pInfo = m_pLibuv->AddMapping(strAgentIP, strAgentPort, strServerIP, strServerPort,
 		bTcp, nerr);
 	if (nerr == 1)
 	{

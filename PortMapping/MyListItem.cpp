@@ -54,7 +54,7 @@ void CMyListItem::DoEvent(DuiLib::TEventUI& event)
 		return;
 	}
 	int nCur = -1;
-	for (size_t i = 0; i < m_text_array.GetSize(); i++)
+	for (int i = 0; i < m_text_array.GetSize(); i++)
 	{
 		ListItemText* curData = (ListItemText*)m_text_array.GetAt(i);
 		if (curData->pRc && PtInRect(curData->pRc, event.ptMouse))
@@ -135,7 +135,7 @@ void CMyListItem::DrawItemText(HDC hDC, const RECT& rcItem)
 	int nFont = pInfo->nFont;
 	int nLinks = 0;
 	ListItemText* curData = nullptr;
-	for (size_t i = 0; i < pInfo->nColumns && i < m_text_array.GetSize(); i++)
+	for (int i = 0; i < pInfo->nColumns && i < m_text_array.GetSize(); i++)
 	{
 		iTextColor = pInfo->dwTextColor;
 		nFont = pInfo->nFont;
@@ -272,7 +272,7 @@ bool CMyListItem::InsetText(int nIndex, const DuiLib::CDuiString& strData, bool 
 int CMyListItem::ClearText()
 {
 	int nsize = m_text_array.GetSize();
-	for (size_t i = 0; i < nsize; i++)
+	for (int i = 0; i < nsize; i++)
 	{
 		ListItemText* pCur = (ListItemText*)m_text_array.GetAt(i);
 		if (pCur)
@@ -319,7 +319,7 @@ bool CMyListItem::GetTextRect(int nIndex, RECT* prc, const RECT& rcitem)
 	return true;
 }
 //////////////////////////////////////////////////////////////////
-CMappingListItem::CMappingListItem(MappingInfo* pInfo)
+CMappingListItem::CMappingListItem(const MappingInfo* pInfo)
 {
 	m_pInfo = pInfo;
 }
@@ -480,5 +480,5 @@ void CConnectListItem::Updata(bool bforce)
 	SetText(6, str);
 	//·þÎñ¶Ë·¢ËÍ   server¡ª¡ª>agent¡ª¡ª>client
 	str = GetFlowString(m_pInfo->nCurFromServerM, m_pInfo->nCurFromServerB);
-	AddText(7, str);
+	SetText(7, str);
 }
