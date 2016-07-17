@@ -100,11 +100,13 @@ string w2a(LPCWSTR str);
 
 #define MSG_LISTEN_FAIL		0x0000010
 #define MSG_REMOVE_MAPPING	0x0000020
+
 class INotifyLoop
 {
 public:
 	virtual void NotifyConnectMessage(UINT nType, ConnectInfo* pInfo) = 0; //connect信息发生变化时的通知
 	virtual void NotifyMappingMessage(UINT nType, MappingInfo* pInfo) = 0; //映射信息发生变化
+	virtual void NotifyGetAllConnectByMapping(ConnectInfo** pInfo, size_t size) = 0;//获取某一映射的所有链接信息
 };
 class IOCallBack;
 class CLibuvAdapter
@@ -123,6 +125,8 @@ public:
 	bool RemoveMapping(MappingInfo* pMapping);
 	//断开一对连接
 	bool RemoveConnect(ConnectInfo* connect_info, bool bAsync = true);//bAsync:是否需要异步
+	//
+	bool GetAllConnect(MappingInfo* pMapping);//获取一个映射的所有连接信息
 	//获取所有本地ip  ipv4
 	bool GetLocalIP(vector<wstring>& vecIP);
 	//
@@ -149,6 +153,8 @@ private:
 	ConnectInfo* GetUDPConnect(MappingInfo* mapping_info, const sockaddr_in* addr);//获取对应的udp链接记录，没有就添加
 
 	void _RemoveMapping(MappingInfo* mapping_info);
+
+	void _GetAllConnect(MappingInfo* mapping_info);
 public:
 	uv_loop_t*		m_pLoop;
 private:

@@ -53,6 +53,7 @@ public:
 	bool Stop();
 	bool Delete();
 	void Updata(bool bforce = false);		//bforce  是否强制刷新
+	MappingInfo* GetInfo() { return m_pInfo; };
 private:
 	MappingInfo*		m_pInfo;
 };

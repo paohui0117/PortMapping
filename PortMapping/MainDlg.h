@@ -23,10 +23,13 @@ public:
 	//重写基类虚函数
 	virtual void InitWindow() override;//在OnCreate最后调用
 	virtual LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, bool& bHandled) override;
+
+	
 	virtual LRESULT HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) override;
 	//INotifyLoop
 	virtual void NotifyConnectMessage(UINT nType, ConnectInfo* pInfo);
 	virtual void NotifyMappingMessage(UINT nType, MappingInfo* pInfo);
+	virtual void NotifyGetAllConnectByMapping(ConnectInfo** pInfo, size_t size);//获取某一映射的所有链接信息
 private:
 	void UpDataList();
 	bool RootNotify(void* p);	//用来处理菜单消息
@@ -46,7 +49,8 @@ private:
 	void OnAddClick();												//添加按钮单击
 	bool CheckAllInfo();											//检测所有输入的信息是否有效
 
-	
+	void DealWithConnectMsg(WPARAM w_param, ConnectInfo* connect_info);
+	void DealWithMappingMsg(WPARAM w_param, MappingInfo* mapping_info);
 private:
 	CButtonUI*	m_pLeft_hide;		//左边隐藏 显示按钮
 	CButtonUI*  m_pBottom_hide;		//下列表隐藏  显示按钮

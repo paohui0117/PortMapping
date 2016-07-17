@@ -264,6 +264,18 @@ LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 		bHandled = true;
 		return S_OK;
 	}
+	else if(uMsg == USER_CONNECT_MSG)
+	{
+		DealWithConnectMsg(wParam, (ConnectInfo*)lParam);
+		bHandled = true;
+		return S_OK;
+	}
+	else if (uMsg == USER_MAPPING_MSG)
+	{
+		DealWithMappingMsg(wParam, (MappingInfo*)lParam);
+		bHandled = true;
+		return S_OK;
+	}
 	bHandled = false;
 	return 0;
 }
@@ -277,6 +289,20 @@ void CMainDlg::NotifyConnectMessage(UINT nType, ConnectInfo* pInfo)
 void CMainDlg::NotifyMappingMessage(UINT nType, MappingInfo* pInfo)
 {
 	::SendMessage(m_hWnd, USER_MAPPING_MSG, nType, (LPARAM)pInfo);
+}
+
+void CMainDlg::NotifyGetAllConnectByMapping(ConnectInfo** pInfo, size_t size)
+{
+	if (!pInfo || size == 0)
+		return;
+	if ((*pInfo)->pMapping != m_pCur_mapping->GetInfo())
+		return;
+	for (size_t i = 0; i < size; i++)
+	{
+		CConnectListItem* pitem = new CConnectListItem(*pInfo);
+		m_pConnect_List->Add(pitem);
+	}
+	m_pConnect_List->SetVisible();
 }
 
 void CMainDlg::OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param)
@@ -334,6 +360,50 @@ bool CMainDlg::CheckAllInfo()
 	if (!m_pEdit_server_port || !m_pEdit_agent_port || !m_pEdit_server_ip)
 		return false;
 	return m_pEdit_server_port->GetState() & m_pEdit_agent_port->GetState() & m_pEdit_server_ip->GetState();
+}
+
+void CMainDlg::DealWithConnectMsg(WPARAM w_param, ConnectInfo* connect_info)
+{
+	if (w_param == MSG_ADD_CONNECT)
+	{
+		if (connect_info->pMapping == m_pCur_mapping->GetInfo())
+		{
+			CConnectListItem* pItem = new CConnectListItem(connect_info);
+			m_pConnect_List->Add(pItem);
+			m_pConnect_List->SetVisible();
+		}
+	}
+	else if (w_param == MSG_DELETE_CONNECT)
+	{
+		if (connect_info->pMapping == m_pCur_mapping->GetInfo())
+		{
+			m_pConnect_List->Remove((CControlUI*)connect_info->pUserData);
+			connect_info->pUserData = nullptr;
+		}
+	}
+}
+
+void CMainDlg::DealWithMappingMsg(WPARAM w_param, MappingInfo* mapping_info)
+{
+	if (!mapping_info)
+		return;
+	if (w_param == MSG_CLEAR_CONNECT || w_param == MSG_LISTEN_FAIL)
+	{
+		if (mapping_info == m_pCur_mapping->GetInfo())
+		{
+			m_pConnect_List->RemoveAll();
+		}
+	}
+	else if (w_param == MSG_REMOVE_MAPPING)
+	{
+		if (mapping_info == m_pCur_mapping->GetInfo())
+		{
+			m_pMapping_List->Remove((CControlUI*)mapping_info->pUserData);
+			mapping_info->pUserData = nullptr;
+			m_pConnect_List->RemoveAll();
+			m_pCur_mapping = nullptr;
+		}
+	}
 }
 
 bool CMainDlg::ButtonNotify(void* pNotify)

@@ -138,6 +138,20 @@ public:
 		
 	}
 
+	//异步获取链接信息
+	static void AnsycGetAllConnect(uv__work* w, int status)
+	{
+		if (!w)
+			return;
+		MappingInfo* mapping_info = (MappingInfo*)(*(int*)((PCHAR)w + sizeof(uv__work)));
+		free(w);
+		if (!mapping_info)
+		{
+			return;
+		}
+		CLibuvAdapter* pThis = (CLibuvAdapter*)mapping_info->pLoop->data;
+		pThis->_GetAllConnect(mapping_info);
+	}
 	//libuv相关  TCP回调函数
 	//内存申请回调函数
 	static void alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
@@ -372,6 +386,8 @@ public:
 		if (req)
 			delete req;
 	}
+
+	
 };
 //common fun
 wstring a2w(const char* str)//内存需要自己释放
@@ -557,6 +573,16 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 	}
 }
 
+bool CLibuvAdapter::GetAllConnect(MappingInfo* pMapping)
+{
+	if (!m_pLoop && !InitLoop())
+		return false;
+	if (!pMapping || pMapping->nState & MAPPING_DELETING)
+		return false;
+	AsyncOperate(pMapping, IOCallBack::AnsycGetAllConnect);
+	return true;
+}
+
 void CLibuvAdapter::AsyncOperate(void* p, AsyncWork workfun)
 {
 	//偷懒的写法
@@ -683,7 +709,6 @@ ConnectInfo* CLibuvAdapter::GetUDPConnect(MappingInfo* mapping_info, const socka
 	}
 	else
 	{
-		
 		map<Connectkey, ConnectInfo*>::iterator itAddr = itorPort->second.find(curKey);
 		if (itAddr == itorPort->second.end())
 			pinfo = new ConnectInfo;
@@ -717,6 +742,32 @@ void CLibuvAdapter::_RemoveMapping(MappingInfo* mapping_info)
 	}
 	USHORT nport = htons(mapping_info->Addr_agent.sin_port);
 	m_mapMapping.erase(nport);
+}
+
+void CLibuvAdapter::_GetAllConnect(MappingInfo* mapping_info)
+{
+	USHORT nPort = htons(mapping_info->Addr_agent.sin_port);
+	map<USHORT, map<Connectkey, ConnectInfo*>>::iterator itPort = m_mapConnect.find(nPort);
+	if (itPort == m_mapConnect.end())//没有记录
+	{
+		return;
+	}
+	if (itPort->second.size() == 0)
+		return;
+	map<Connectkey, ConnectInfo*>::iterator itAddr = itPort->second.begin();
+	ConnectInfo* *_connectList = new ConnectInfo*[itPort->second.size()];
+	int nIndex = 0;
+	for (; itAddr != itPort->second.end(); itAddr++)
+	{
+		_connectList[nIndex++] = itAddr->second;
+	}
+	//通知外接
+	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
+	{
+		(*it)->NotifyGetAllConnectByMapping(_connectList, nIndex);
+	}
+	//释放
+	delete[] _connectList;
 }
 
 void CLibuvAdapter::AddConnect(ConnectInfo* connect_info)
