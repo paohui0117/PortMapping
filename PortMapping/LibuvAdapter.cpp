@@ -179,7 +179,7 @@ public:
 		}
 		//成功了，将记录添加到对应的容器
 		CLibuvAdapter* pThis = (CLibuvAdapter*)pConInfo->pMapping->pLoop->data;
-		pThis->AddConnect(pConInfo);
+		pThis->AddTCPConnect(pConInfo);
 		//开始读取数据
 		pConInfo->u.tcp.server_tcp.data = pConInfo;
 		uv_read_start((uv_stream_t*)&pConInfo->u.tcp.server_tcp, alloc_cb, tcp_read_cb);
@@ -354,7 +354,8 @@ wstring a2w(const char* str)//内存需要自己释放
 	delete[] pw;
 	return wstr;
 }
-string w2a(const wchar_t* str)
+
+string w2a(LPCWSTR* str)
 {
 	if (!str)
 		return "";
@@ -368,6 +369,7 @@ string w2a(const wchar_t* str)
 	delete[] pa;
 	return astr;
 }
+
 
 CLibuvAdapter::CLibuvAdapter() : m_pLoop(nullptr), m_Loop_thread(nullptr)
 {
@@ -636,7 +638,7 @@ ConnectInfo* CLibuvAdapter::GetUDPConnect(MappingInfo* mapping_info, const socka
 	return pinfo;
 }
 
-void CLibuvAdapter::AddConnect(ConnectInfo* connect_info)
+void CLibuvAdapter::AddTCPConnect(ConnectInfo* connect_info)
 {
 	USHORT nPort = htons(connect_info->pMapping->Addr_agent.sin_port);
 	map<USHORT, map<Connectkey, ConnectInfo*>>::iterator itPort = m_mapConnect.find(nPort);

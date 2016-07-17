@@ -129,11 +129,11 @@ private:
 	
 	void AsyncOperate(void* p, AsyncWork workfun);//异步处理用户的操作
 												  
-	void AddConnect(ConnectInfo* connect_info);//添加一条记录
+	void AddTCPConnect(ConnectInfo* connect_info);//添加一条记录
 	
 	void RemoveAllConnect(MappingInfo* pMappingInfo);//移除某一映射端口相关的全部链接
 
-	ConnectInfo* GetUDPConnect(MappingInfo* mapping_info, const sockaddr_in* addr);//
+	ConnectInfo* GetUDPConnect(MappingInfo* mapping_info, const sockaddr_in* addr);//获取对应的udp链接记录，没有就添加
 public:
 	uv_loop_t*		m_pLoop;
 private:
