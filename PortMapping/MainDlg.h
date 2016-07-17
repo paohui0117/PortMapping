@@ -6,7 +6,8 @@
 #include "MyListItem.h"
 
 using namespace DuiLib;
-class CMainDlg : public WindowImplBase
+class CMainDlg : public WindowImplBase,
+	public INotifyLoop
 {
 public:
 	CMainDlg();
@@ -19,12 +20,13 @@ protected:
 	virtual LPCTSTR GetWindowClassName(void) const;//注册用的窗口类名
 	virtual CControlUI* CreateControl(LPCTSTR pstrClass)  override;
 public:
-	
 	//重写基类虚函数
 	virtual void InitWindow() override;//在OnCreate最后调用
-	
 	virtual LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, bool& bHandled) override;
 	virtual LRESULT HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) override;
+	//INotifyLoop
+	virtual void NotifyConnectMessage(UINT nType, ConnectInfo* pInfo);
+	virtual void NotifyMappingMessage(UINT nType, MappingInfo* pInfo);
 private:
 	void UpDataList();
 	bool RootNotify(void* p);	//用来处理菜单消息

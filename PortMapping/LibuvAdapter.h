@@ -8,6 +8,7 @@ using namespace std;
 #define MAPPING_STOP	0x00000001
 #define MAPPING_START	0x00000002
 #define MAPPING_FAIL	0x00000004
+#define MAPPING_DELETING	0x00000006
 //
 #define INIT_FAIL		0x00000010
 #define BIND_FAIL		0x00000020
@@ -95,7 +96,10 @@ string w2a(LPCWSTR str);
 #define MSG_ADD_CONNECT		0x0000001
 #define MSG_DELETE_CONNECT	0x0000002
 
-#define MSG_LISTEN_FAIL		0x0000004
+#define MSG_CLEAR_CONNECT	0x0000004
+
+#define MSG_LISTEN_FAIL		0x0000010
+#define MSG_REMOVE_MAPPING	0x0000020
 class INotifyLoop
 {
 public:
@@ -115,6 +119,8 @@ public:
 	bool StartMapping(MappingInfo* pMapping);
 	//停止一个映射
 	bool StopMapping(MappingInfo* pMapping);
+	//移除一个映射
+	bool RemoveMapping(MappingInfo* pMapping);
 	//断开一对连接
 	bool RemoveConnect(ConnectInfo* connect_info, bool bAsync = true);//bAsync:是否需要异步
 	//获取所有本地ip  ipv4
@@ -127,6 +133,7 @@ public:
 	bool GetRemoveAllIfFail();
 
 	void SetRemoveAllIfFail(bool b);
+	
 private:
 	typedef void(*AsyncWork)(struct uv__work*, int);
 	bool InitLoop();	//初始化loop
@@ -141,11 +148,11 @@ private:
 
 	ConnectInfo* GetUDPConnect(MappingInfo* mapping_info, const sockaddr_in* addr);//获取对应的udp链接记录，没有就添加
 
-	
+	void _RemoveMapping(MappingInfo* mapping_info);
 public:
 	uv_loop_t*		m_pLoop;
 private:
-	bool				m_bRemoveAll;		//当本地监听发生错误断开时，是否删除该映射的所有链接,默认为true
+	bool				m_bRemoveAll;		//当本地监听发生错误断开时或者用户停止时，是否删除该映射的所有链接,默认为true
 	set<INotifyLoop*>	m_setNotify;
 
 	uv_thread_t		m_Loop_thread;

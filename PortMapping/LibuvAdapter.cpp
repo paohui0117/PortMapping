@@ -82,6 +82,7 @@ public:
 		//开始接收
 		uv_udp_recv_start(&mapping_info->u.listen_udp, alloc_cb, udp_listen_recv_cb);
 		mapping_info->nState = MAPPING_START;
+		free(w);
 	}
 	
 	//回调函数，异步关闭映射
@@ -100,6 +101,7 @@ public:
 			uv_close((uv_handle_t*)&mapping_info->u.listen_tcp, listen_close_cb);
 		else
 			uv_close((uv_handle_t*)&mapping_info->u.listen_udp, listen_close_cb);
+		free(w);
 	}
 
 	//异步关闭一条连接
@@ -208,9 +210,15 @@ public:
 		//关闭所有该端口上的连接
 		CLibuvAdapter* pThis = (CLibuvAdapter*)pMappingInfo->pLoop->data;
 		pThis->RemoveAllConnect(pMappingInfo);
+		if (pMappingInfo->nState & MAPPING_DELETING)//需要删除
+		{
+			pThis->_RemoveMapping(pMappingInfo);
+			return;
+		}
 		//改变状态
 		pMappingInfo->nState |= MAPPING_STOP;
 		pMappingInfo->nState &= ~MAPPING_START;
+		
 	}
 
 	//连接的关闭回调，
@@ -456,6 +464,17 @@ bool CLibuvAdapter::StopMapping(MappingInfo* pMapping)
 	return true;
 }
 
+bool CLibuvAdapter::RemoveMapping(MappingInfo* pMapping)
+{
+	if (!m_pLoop && !InitLoop())
+		return false;
+	if (!pMapping)
+		return false;
+	pMapping->nState |= MAPPING_DELETING;//改变状态
+	AsyncOperate(pMapping, IOCallBack::AnsycStopMapping);
+	return true;
+}
+
 //初始化loop
 bool CLibuvAdapter::InitLoop()
 {
@@ -605,6 +624,10 @@ void CLibuvAdapter::RemoveAllConnect(MappingInfo* pMappingInfo)
 	{
 		return;
 	}
+	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
+	{
+		(*it)->NotifyMappingMessage(MSG_CLEAR_CONNECT, pMappingInfo);
+	}
 	map<Connectkey, ConnectInfo*>::iterator itAddr = itPort->second.begin();
 	if (pMappingInfo->bTCP)
 	{
@@ -674,6 +697,16 @@ ConnectInfo* CLibuvAdapter::GetUDPConnect(MappingInfo* mapping_info, const socka
 		(*it)->NotifyConnectMessage(MSG_DELETE_CONNECT, pinfo);
 	}
 	return pinfo;
+}
+
+void CLibuvAdapter::_RemoveMapping(MappingInfo* mapping_info)
+{
+	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
+	{
+		(*it)->NotifyMappingMessage(MSG_REMOVE_MAPPING, mapping_info);
+	}
+	USHORT nport = htons(mapping_info->Addr_agent.sin_port);
+	m_mapMapping.erase(nport);
 }
 
 void CLibuvAdapter::AddConnect(ConnectInfo* connect_info)

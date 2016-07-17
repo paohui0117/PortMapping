@@ -3,6 +3,9 @@
 #include "UIMenu.h"
 #include "EditUIEx.h"
 #define MAIN_UPDATA_TIMER 1234
+
+#define USER_CONNECT_MSG	(WM_USER+100)
+#define USER_MAPPING_MSG	(WM_USER + 101)
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr),
@@ -265,6 +268,17 @@ LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 	return 0;
 }
 
+void CMainDlg::NotifyConnectMessage(UINT nType, ConnectInfo* pInfo)
+{
+	//通过sendmessage达到同步的作用
+	::SendMessage(m_hWnd, USER_CONNECT_MSG, nType, (LPARAM)pInfo);
+}
+
+void CMainDlg::NotifyMappingMessage(UINT nType, MappingInfo* pInfo)
+{
+	::SendMessage(m_hWnd, USER_MAPPING_MSG, nType, (LPARAM)pInfo);
+}
+
 void CMainDlg::OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param)
 {
 	if (!pMenuItem)
@@ -293,7 +307,7 @@ void CMainDlg::OnAddClick()
 	CDuiString strProtocol = m_pCmb_protocol->GetText();
 	bool bTcp = strProtocol == L"TCP";
 	int nerr = 0;
-	const MappingInfo* pInfo = m_pLibuv->AddMapping(strAgentIP, strAgentPort, strServerIP, strServerPort,
+	MappingInfo* pInfo = m_pLibuv->AddMapping(strAgentIP, strAgentPort, strServerIP, strServerPort,
 		bTcp, nerr);
 	if (nerr == 1)
 	{

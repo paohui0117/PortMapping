@@ -319,9 +319,10 @@ bool CMyListItem::GetTextRect(int nIndex, RECT* prc, const RECT& rcitem)
 	return true;
 }
 //////////////////////////////////////////////////////////////////
-CMappingListItem::CMappingListItem(const MappingInfo* pInfo)
+CMappingListItem::CMappingListItem(MappingInfo* pInfo)
 {
 	m_pInfo = pInfo;
+	m_pInfo->pUserData = this;
 }
 
 CMappingListItem::~CMappingListItem()
@@ -411,6 +412,7 @@ void CMappingListItem::Updata(bool bforce)
 CConnectListItem::CConnectListItem(ConnectInfo* pInfo)
 {
 	m_pInfo = pInfo;
+	m_pInfo->pUserData = this;
 }
 
 CConnectListItem::~CConnectListItem()
