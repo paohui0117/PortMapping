@@ -8,7 +8,8 @@ using namespace std;
 #define MAPPING_STOP	0x00000001
 #define MAPPING_START	0x00000002
 #define MAPPING_FAIL	0x00000004
-#define MAPPING_DELETING	0x00000006
+
+#define MAPPING_DELETING	0x00000008
 //
 #define INIT_FAIL		0x00000010
 #define BIND_FAIL		0x00000020
@@ -68,6 +69,7 @@ struct ConnectInfo
 	} u;
 	bool			bInMap;			//是否已经加入到记录中
 	void*			pUserData;
+	bool			bDeleting;
 };
 struct Connectkey
 {
@@ -99,6 +101,7 @@ string w2a(LPCWSTR str);
 #define MSG_CLEAR_CONNECT	0x0000004
 
 #define MSG_LISTEN_FAIL		0x0000010
+#define MSG_MAPPING_STOP	0x0000040
 #define MSG_REMOVE_MAPPING	0x0000020
 
 class INotifyLoop

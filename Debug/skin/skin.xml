@@ -28,13 +28,13 @@
                itemtextpadding="5,0,0,0" />
         
         <Label text="本地端口:" height="20"  />
-        <EditEx name="local_port"  maxchar="5"  waring="true" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
+        <EditEx name="local_port"  text="5555" maxchar="5"  waring="true" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
         
         <Label text="映射IP:" height="40" padding="0,20,0,0" />
-        <EditEx name="mapping_ip" maxchar="15" waring="true" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
+        <EditEx name="mapping_ip" text="192.168.1.106" maxchar="15" waring="true" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
       
         <Label text="映射端口:" height="20" />
-        <EditEx name="mapping_port" maxchar="5"  waring="true" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
+        <EditEx name="mapping_port" text="6666" maxchar="5"  waring="true" height="20" bordersize="1" bordercolor="#FFc3c3c3" focusbordercolor="#ffB4CDEc"/>
       
         <Label text="协议:" height="40" padding="0,20,0,0" />
         <Combo name="protocol" height="19" normalimage="file='Combo_nor.bmp'" pushedimage="file='Combo_over.bmp'" 

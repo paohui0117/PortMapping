@@ -32,6 +32,7 @@ public:
 	virtual void NotifyGetAllConnectByMapping(ConnectInfo** pInfo, size_t size);//获取某一映射的所有链接信息
 private:
 	void UpDataList();
+	bool CheckNotify(void* p);
 	bool RootNotify(void* p);	//用来处理菜单消息
 	
 	bool ButtonNotify(void* pNotify);//按钮Notify消息
@@ -43,7 +44,11 @@ private:
 	bool CheckIP(void* p);			//检测IP
 
 	void GetLocalIP();				//获取本地IP
-	void OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param);	//菜单初始化，在弹出之前调用
+	void OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param);
+
+
+	
+	//菜单初始化，在弹出之前调用
 	void OnMenuItemClick(LPCWSTR pName, LPARAM l_param);			//菜单项单击
 	
 	void OnAddClick();												//添加按钮单击
@@ -51,6 +56,15 @@ private:
 
 	void DealWithConnectMsg(WPARAM w_param, ConnectInfo* connect_info);
 	void DealWithMappingMsg(WPARAM w_param, MappingInfo* mapping_info);
+	//菜单消息处理
+	void StartMapping(bool bAllSelect = false);
+	void StopMapping(bool bAllSelect = false);
+	void DeleteMapping(bool bAllSelect = false);
+	typedef bool (CLibuvAdapter::*Func)(MappingInfo *);
+	bool MappingOperate(Func fun, bool bAllSelect = false);
+	void DeleteConnect(bool bAllSelect = false);
+
+	bool AnlySelect(CListUI* pList);
 private:
 	CButtonUI*	m_pLeft_hide;		//左边隐藏 显示按钮
 	CButtonUI*  m_pBottom_hide;		//下列表隐藏  显示按钮
@@ -70,11 +84,20 @@ private:
 
 	CButtonUI*	m_pBtn_ADD;			//ADD按钮
 
+	CCheckBoxUI*	m_pCheck_Mapping;
+	CCheckBoxUI*	m_pCheck_Connect;
+
 	vector<wstring>		m_vecLocalIP;//本地IP
 	CLibuvAdapter*		m_pLibuv;	//调用libuv相关功能
 
 	wregex*				m_pregex_IP;//ip判断的正则表达式
 
 	CMappingListItem*			m_pCur_mapping;
+
+	union
+	{
+		CMappingListItem*		m_pMapping;
+		CConnectListItem*		m_pConnect;
+	} m_u_cur;
 };
 

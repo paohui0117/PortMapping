@@ -29,6 +29,8 @@ public:
 	int ClearText();
 	void SetClickTextColor(int nColor) { m_nClickCor = nColor; };
 	void SetClickTextFont(int nFont) { m_nClictFont = nFont; };
+	bool GetCheck();
+	void SetCheck(bool b = true);
 private:
 	bool GetTextRect(int nIndex, RECT* prc, const RECT& rcitem);
 private:
@@ -56,6 +58,7 @@ public:
 	MappingInfo* GetInfo() { return m_pInfo; };
 private:
 	MappingInfo*		m_pInfo;
+	CControlUI*			m_pCtrl;
 };
 
 //连接列表项
@@ -71,6 +74,7 @@ public:
 	
 	bool Delete();
 	void Updata(bool bforce = false);		//bforce  是否强制刷新
+	ConnectInfo* GetInfo() { return m_pInfo; };
 private:
 	ConnectInfo*		m_pInfo;
 };

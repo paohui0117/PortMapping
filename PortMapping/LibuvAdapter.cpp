@@ -26,32 +26,30 @@ public:
 		if (!w)
 			return;
 		MappingInfo* mapping_info = (MappingInfo*)(*(int*)((PCHAR)w + sizeof(uv__work)));
-		if (!mapping_info)
+		free(w);
+		if (!mapping_info || mapping_info->nState == MAPPING_START)
 		{
-			free(w);
 			return;
 		}
 		//初始化tcp
 		if (uv_tcp_init_ex(mapping_info->pLoop, &mapping_info->u.listen_tcp, AF_INET) != 0)
 		{
 			mapping_info->nState = MAPPING_FAIL | INIT_FAIL;
-			free(w);
 			return;
 		}
 		//绑定
 		if (uv_tcp_bind(&mapping_info->u.listen_tcp, (sockaddr*)&mapping_info->Addr_agent, AF_INET) != 0)
 		{
 			mapping_info->nState = MAPPING_FAIL | BIND_FAIL;
-			free(w);
 			return;
 		}
 		//监听
 		if (uv_listen((uv_stream_t*)&mapping_info->u.listen_tcp, 10, tcp_listen_connection_cb) != 0)
 		{
 			mapping_info->nState = MAPPING_FAIL | LISTEN_FAIL;
-			free(w);
 			return;
 		}
+		mapping_info->nState = MAPPING_START;
 	}
 	
 	//回调函数，异步开启UDP映射
@@ -61,7 +59,7 @@ public:
 			return;
 		MappingInfo* mapping_info = (MappingInfo*)(*(int*)((PCHAR)w + sizeof(uv__work)));
 		free(w);
-		if (!mapping_info)
+		if (!mapping_info || mapping_info->nState == MAPPING_START)
 			return;
 		//初始化udp
 		if (uv_udp_init_ex(mapping_info->pLoop, &mapping_info->u.listen_udp, AF_INET) != 0)
@@ -92,7 +90,7 @@ public:
 			return;
 		}
 		//已经停止了
-		if (mapping_info->nState & MAPPING_START || mapping_info->nState & MAPPING_STOP)
+		if (mapping_info->nState & MAPPING_STOP)
 		{
 			if (mapping_info->nState & MAPPING_DELETING)//如果是需要移除的状态
 			{
@@ -104,10 +102,12 @@ public:
 		//停止监听
 		if (mapping_info->bTCP)
 		{
+			mapping_info->u.listen_tcp.data = mapping_info;
 			uv_close((uv_handle_t*)&mapping_info->u.listen_tcp, listen_close_cb);
 		}
 		else
 		{
+			mapping_info->u.listen_udp.data = mapping_info;
 			uv_close((uv_handle_t*)&mapping_info->u.listen_udp, listen_close_cb);
 		}
 	}
@@ -241,7 +241,10 @@ public:
 		//改变状态
 		pMappingInfo->nState |= MAPPING_STOP;
 		pMappingInfo->nState &= ~MAPPING_START;
-		
+		for (set<INotifyLoop*>::iterator it = pThis->m_setNotify.begin(); it != pThis->m_setNotify.end(); it++)
+		{
+			(*it)->NotifyMappingMessage(MSG_MAPPING_STOP, pMappingInfo);
+		}
 	}
 
 	//连接的关闭回调，
@@ -461,6 +464,7 @@ MappingInfo* CLibuvAdapter::AddMapping(LPCWSTR strAgentIP, LPCWSTR strAgentPort,
 		m_mapMapping.erase(nAgentPort);
 		return nullptr;
 	}
+	curInfp.nState = MAPPING_STOP;
 	return &curInfp;
 }
 
@@ -504,12 +508,18 @@ bool CLibuvAdapter::RemoveMapping(MappingInfo* pMapping)
 bool CLibuvAdapter::InitLoop()
 {
 	m_pLoop = uv_default_loop();
-	m_pLoop->data = this;//将loop与本类联系起来
 	if (!m_pLoop)
 		return false;
+	m_pLoop->data = this;//将loop与本类联系起来
+	
 	//单纯的保持事件循环存活，一个空的回调
 	uv_check_init(m_pLoop, &m_check_keeprun);
 	uv_check_start(&m_check_keeprun, IOCallBack::null_cb);
+	//
+	for (auto it = m_mapMapping.begin(); it != m_mapMapping.end(); it++)
+	{
+		it->second.pLoop = m_pLoop;
+	}
 	int ret = uv_thread_create(&m_Loop_thread, IOCallBack::LoopThread, this);//开启工作线程
 	return ret == 0;
 }
@@ -540,6 +550,7 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 		if (!connect_info || connect_info->pMapping->nState & MAPPING_DELETING)
 			return false;
 		//工作线程已经开启，接下来的操作都是异步的
+		connect_info->bDeleting = true;
 		AsyncOperate(connect_info, IOCallBack::AnsycRemoveConnect);
 		return true;
 	}
@@ -721,6 +732,7 @@ ConnectInfo* CLibuvAdapter::GetUDPConnect(MappingInfo* mapping_info, const socka
 	pinfo->bInMap = true;
 	pinfo->Addr_Client.sin_port = addr->sin_port;
 	pinfo->Addr_Client.sin_addr.S_un.S_addr = addr->sin_addr.S_un.S_addr;
+	pinfo->bDeleting = false;
 	//新建与服务端交流的socket
 	uv_udp_init_ex(mapping_info->pLoop, &pinfo->u.server_udp, AF_INET);
 	//开始接收

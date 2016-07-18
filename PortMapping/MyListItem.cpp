@@ -102,6 +102,10 @@ void CMyListItem::DoEvent(DuiLib::TEventUI& event)
 		}
 		return;
 	}
+	if (event.Type == UIEVENT_CONTEXTMENU)
+	{
+		event.wParam = m_iIndex + 1;//让外接知道是哪一个item弹出的菜单
+	}
 	CListContainerElementUI::DoEvent(event);
 }
 
@@ -157,7 +161,7 @@ void CMyListItem::DrawItemText(HDC hDC, const RECT& rcItem)
 		}
 		RECT rcText = curRect;
 		if (i == 0)//给checkbox留空间
-			rcText.left += 10;
+			rcText.left += 15;
 		rcText.left += pInfo->rcTextPadding.left;
 		rcText.right -= pInfo->rcTextPadding.right;
 		rcText.top += pInfo->rcTextPadding.top;
@@ -286,6 +290,19 @@ int CMyListItem::ClearText()
 	return nsize;
 }
 
+bool CMyListItem::GetCheck()
+{
+	if (!m_pCheck_box)
+		return false;
+	return m_pCheck_box->GetCheck();
+}
+
+void CMyListItem::SetCheck(bool b)
+{
+	if (m_pCheck_box)
+		m_pCheck_box->SetCheck(b);
+}
+
 bool CMyListItem::GetTextRect(int nIndex, RECT* prc, const RECT& rcitem)
 {
 	if (!prc)
@@ -332,13 +349,13 @@ CMappingListItem::~CMappingListItem()
 void CMappingListItem::DoInit()
 {
 	//添加状态图标
-	CControlUI* pCtrl = new CControlUI;
-	pCtrl->SetAttribute(L"pos", L"18,5,30,17");
-	pCtrl->SetFloat();
+	m_pCtrl = new CControlUI;
+	m_pCtrl->SetAttribute(L"pos", L"18,5,30,17");
+	m_pCtrl->SetFloat();
 	SIZE rs = { 12, 12 };
-	pCtrl->SetBorderRound(rs);
-	pCtrl->SetBkColor(0xffececec);
-	Add(pCtrl);
+	m_pCtrl->SetBorderRound(rs);
+	m_pCtrl->SetBkColor(0xffececec);
+	Add(m_pCtrl);
 	CMyListItem::DoInit();
 	if (!m_pInfo)
 		return;
@@ -388,15 +405,25 @@ void CMappingListItem::Updata(bool bforce)
 {
 	if (!m_pInfo)
 		return;
-	if (!bforce && m_pInfo->nState == 0)
+	if (!bforce && m_pInfo->nState == MAPPING_STOP)
 		return;
 	//状态
-	if (m_pInfo->nState == 0 )
+	if (m_pInfo->nState == MAPPING_STOP)
+	{
 		SetText(4, L"停止");
+		m_pCtrl->SetBkColor(0xffececec);
+	}
 	else if (m_pInfo->nState & MAPPING_START)
+	{
 		SetText(4, L"开始");
+		m_pCtrl->SetBkColor(0xff00ff00);
+	}
 	else if (m_pInfo->nState & MAPPING_FAIL)
+	{
 		SetText(4, L"出错");
+		m_pCtrl->SetBkColor(0xffff0000);
+	}
+		
 	//数量
 	CDuiString str;
 	str.Format(L"%d", m_pInfo->nConnect);
@@ -407,6 +434,7 @@ void CMappingListItem::Updata(bool bforce)
 	//服务端发送   server——>agent——>client
 	str = GetFlowString(m_pInfo->nTotalFromServerM, m_pInfo->nTotalFromServerB);
 	SetText(8, str);
+	Invalidate();
 }
 //////////////////////////////////////////////////////////////////////////
 CConnectListItem::CConnectListItem(ConnectInfo* pInfo)

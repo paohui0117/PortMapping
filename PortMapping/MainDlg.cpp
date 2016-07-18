@@ -6,15 +6,18 @@
 
 #define USER_CONNECT_MSG	(WM_USER+100)
 #define USER_MAPPING_MSG	(WM_USER + 101)
+#define USER_ALLCONNECT_MSG (WM_USER + 102)
 CMainDlg::CMainDlg() :
 	m_pLeft_hide(nullptr), m_pBottom_hide(nullptr), m_pLeft_layout(nullptr),
 	m_pMapping_List(nullptr), m_pConnect_List(nullptr), m_pMenu_hide(nullptr),
 	m_pEdit_agent_port(nullptr), m_pEdit_server_port(nullptr), m_pEdit_server_ip(nullptr),
 	m_pCmb_protocol(nullptr), m_pBtn_ADD(nullptr), m_pCur_mapping(nullptr),
-	m_pCmb_agent_ip(nullptr)
+	m_pCmb_agent_ip(nullptr), m_pCheck_Mapping(nullptr), m_pCheck_Connect(nullptr)
 {
 	m_pLibuv = new CLibuvAdapter;
+	m_pLibuv->AddNotify(this);
 	m_pregex_IP = new wregex(L"^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)($|(?!\\.$)\\.)){4}$");
+	m_u_cur.m_pMapping = nullptr;
 }
 
 
@@ -78,6 +81,7 @@ void CMainDlg::InitWindow()
 	{
 		m_pMapping_List = static_cast<CListUI*>(pCur);
 		m_pMapping_List->OnNotify += MakeDelegate(this, &CMainDlg::ListNotify);
+		m_pMapping_List->GetList()->SetContextMenuUsed(false);
 	}
 	//链接列表
 	pCur = m_PaintManager.FindSubControlByName(nullptr, L"connect_list");
@@ -130,6 +134,19 @@ void CMainDlg::InitWindow()
 		m_pCmb_agent_ip = static_cast<CComboUI*>(pCur);
 		m_pCmb_agent_ip->SelectItem(0);
 		GetLocalIP();
+	}
+
+	pCur = m_PaintManager.FindSubControlByName(nullptr, L"check_mapping");
+	if (pCur->GetInterface(DUI_CTR_CHECKBOX))
+	{
+		m_pCheck_Mapping = static_cast<CCheckBoxUI*>(pCur);
+		m_pCheck_Mapping->OnNotify += MakeDelegate(this, &CMainDlg::CheckNotify);
+	}
+	pCur = m_PaintManager.FindSubControlByName(nullptr, L"check_connect");
+	if (pCur->GetInterface(DUI_CTR_CHECKBOX))
+	{
+		m_pCheck_Connect = static_cast<CCheckBoxUI*>(pCur);
+		m_pCheck_Connect->OnNotify += MakeDelegate(this, &CMainDlg::CheckNotify);
 	}
 	
 	if (m_PaintManager.GetRoot())
@@ -256,6 +273,34 @@ void CMainDlg::UpDataList()
 	}
 }
 
+bool CMainDlg::CheckNotify(void* p)
+{
+	TNotifyUI* pNotify = (TNotifyUI*)p;
+	if (!pNotify)
+		return false;
+	if (pNotify->sType == DUI_MSGTYPE_SELECTCHANGED)
+	{
+		CMyListItem* pItem = nullptr;
+		if (pNotify->pSender == m_pCheck_Mapping)
+		{
+			for (size_t i = 0; i < m_pMapping_List->GetCount(); i++)
+			{
+				pItem = (CMyListItem*)m_pMapping_List->GetItemAt(i);
+				pItem->SetCheck(m_pCheck_Mapping->GetCheck());
+			}
+		}
+		else if (pNotify->pSender == m_pCheck_Connect)
+		{
+			for (size_t i = 0; i < m_pConnect_List->GetCount(); i++)
+			{
+				pItem = (CMyListItem*)m_pConnect_List->GetItemAt(i);
+				pItem->SetCheck(m_pCheck_Connect->GetCheck());
+			}
+		}
+	}
+	return false;
+}
+
 LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	if (uMsg == WM_USER_MENUITEM_CLICK)
@@ -276,6 +321,23 @@ LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 		bHandled = true;
 		return S_OK;
 	}
+	else if (uMsg == USER_ALLCONNECT_MSG)
+	{
+		ConnectInfo** pInfo = (ConnectInfo**)wParam;
+		size_t size = lParam;
+		bHandled = true;
+		if (!pInfo || size == 0)
+			return S_OK;
+		if ((*pInfo)->pMapping != m_pCur_mapping->GetInfo())
+			return S_OK;
+		for (size_t i = 0; i < size; i++)
+		{
+			CConnectListItem* pitem = new CConnectListItem(*pInfo);
+			m_pConnect_List->Add(pitem);
+		}
+		m_pConnect_List->SetVisible();
+		return S_OK;
+	}
 	bHandled = false;
 	return 0;
 }
@@ -293,31 +355,92 @@ void CMainDlg::NotifyMappingMessage(UINT nType, MappingInfo* pInfo)
 
 void CMainDlg::NotifyGetAllConnectByMapping(ConnectInfo** pInfo, size_t size)
 {
-	if (!pInfo || size == 0)
-		return;
-	if ((*pInfo)->pMapping != m_pCur_mapping->GetInfo())
-		return;
-	for (size_t i = 0; i < size; i++)
-	{
-		CConnectListItem* pitem = new CConnectListItem(*pInfo);
-		m_pConnect_List->Add(pitem);
-	}
-	m_pConnect_List->SetVisible();
+	::SendMessage(m_hWnd, USER_ALLCONNECT_MSG, (WPARAM)pInfo, (LPARAM)pInfo);
 }
 
 void CMainDlg::OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param)
 {
 	if (!pMenuItem)
 		return;
-	int a = 10;
+	if (!m_u_cur.m_pMapping)//没能记录是哪个列表项弹出的
+		return;
+	CDuiString pStrName = pMenuItem->GetName();
+	if (wcscmp(pStrName, L"start") == 0)//开始
+	{
+		pMenuItem->SetEnabled(!(m_u_cur.m_pMapping->GetInfo()->nState & (MAPPING_START | MAPPING_DELETING)));
+	}
+	else if (wcscmp(pStrName, L"stop") == 0)
+	{
+		pMenuItem->SetEnabled(m_u_cur.m_pMapping->GetInfo()->nState & (MAPPING_START | MAPPING_DELETING));
+	}
+	else if (wcscmp(pStrName, L"delete") == 0)
+	{
+		pMenuItem->SetEnabled(!(m_u_cur.m_pMapping->GetInfo()->nState & MAPPING_DELETING));
+	}
+	else if (wcscmp(pStrName, L"delete2") == 0)
+	{
+		pMenuItem->SetEnabled(!(m_u_cur.m_pConnect->GetInfo()->bDeleting));
+	}
+	else if (wcscmp(pStrName, L"start_sel") == 0)
+	{
+		pMenuItem->SetEnabled(AnlySelect(m_pMapping_List));
+	}
+	else if (wcscmp(pStrName, L"stop_sel") == 0)
+	{
+		pMenuItem->SetEnabled(AnlySelect(m_pMapping_List));
+	}
+	else if (wcscmp(pStrName, L"delete_sel") == 0)
+	{
+		pMenuItem->SetEnabled(AnlySelect(m_pMapping_List));
+	}
+	else if (wcscmp(pStrName, L"delete_sel2") == 0)
+	{
+		pMenuItem->SetEnabled(AnlySelect(m_pConnect_List));
+	}
 }
 
 void CMainDlg::OnMenuItemClick(LPCWSTR pName, LPARAM l_param)
 {
 	if (!pName)
 		return;
-	MessageBox(m_hWnd, pName, L"菜单单击", MB_OK);
-	int a = 10;
+	if (!m_u_cur.m_pMapping)//没能记录是哪个列表项弹出的
+		return;
+	if (wcscmp(pName, L"start") == 0)//开始
+	{
+		StartMapping();
+	}
+	else if (wcscmp(pName, L"stop") == 0)
+	{
+		StopMapping();
+	}
+	else if (wcscmp(pName, L"stop") == 0)
+	{
+		StopMapping();
+	}
+	else if (wcscmp(pName, L"delete") == 0)
+	{
+		DeleteMapping();
+	}
+	else if (wcscmp(pName, L"delete2") == 0)
+	{
+		DeleteConnect();
+	}
+	else if (wcscmp(pName, L"start_sel") == 0)
+	{
+		StartMapping(true);
+	}
+	else if (wcscmp(pName, L"stop_sel") == 0)
+	{
+		StopMapping(true);
+	}
+	else if (wcscmp(pName, L"delete_sel") == 0)
+	{
+		DeleteMapping(true);
+	}
+	else if (wcscmp(pName, L"delete_sel2") == 0)
+	{
+		DeleteConnect(true);
+	}
 }
 
 
@@ -387,23 +510,101 @@ void CMainDlg::DealWithMappingMsg(WPARAM w_param, MappingInfo* mapping_info)
 {
 	if (!mapping_info)
 		return;
-	if (w_param == MSG_CLEAR_CONNECT || w_param == MSG_LISTEN_FAIL)
+	if (w_param == MSG_CLEAR_CONNECT || w_param == MSG_LISTEN_FAIL || w_param == MSG_MAPPING_STOP)
 	{
-		if (mapping_info == m_pCur_mapping->GetInfo())
+		if (m_pCur_mapping && mapping_info == m_pCur_mapping->GetInfo())
 		{
 			m_pConnect_List->RemoveAll();
+		}
+		if (w_param == MSG_LISTEN_FAIL || w_param == MSG_MAPPING_STOP)
+		{
+			CMappingListItem* pItem = (CMappingListItem*)mapping_info->pUserData;
+			if (!pItem)
+				return;
+			pItem->Updata(true);
 		}
 	}
 	else if (w_param == MSG_REMOVE_MAPPING)
 	{
-		if (mapping_info == m_pCur_mapping->GetInfo())
+		if (m_pCur_mapping && mapping_info == m_pCur_mapping->GetInfo())
 		{
-			m_pMapping_List->Remove((CControlUI*)mapping_info->pUserData);
-			mapping_info->pUserData = nullptr;
 			m_pConnect_List->RemoveAll();
 			m_pCur_mapping = nullptr;
 		}
+		if (mapping_info->pUserData)
+		{
+			m_pMapping_List->Remove((CControlUI*)mapping_info->pUserData);
+			mapping_info->pUserData = nullptr;
+		}
 	}
+}
+
+void CMainDlg::StartMapping(bool bAll)
+{
+	MappingOperate(&CLibuvAdapter::StartMapping, bAll);
+}
+
+void CMainDlg::StopMapping(bool bAllSelect)
+{
+	MappingOperate(&CLibuvAdapter::StopMapping, bAllSelect);
+}
+
+void CMainDlg::DeleteMapping(bool bAllSelect)
+{
+	MappingOperate(&CLibuvAdapter::RemoveMapping, bAllSelect);
+}
+
+bool CMainDlg::MappingOperate(Func fun, bool bAllSelect)
+{
+	if (!bAllSelect)
+	{
+		if (!m_u_cur.m_pMapping)
+			return false;
+		return (m_pLibuv->*fun)(m_u_cur.m_pMapping->GetInfo());
+	}
+	
+	CMappingListItem* pItem = nullptr;
+	for (int i = 0; i < m_pMapping_List->GetCount(); i++)
+	{
+		pItem = (CMappingListItem*)m_pMapping_List->GetItemAt(i);
+		if (!pItem->GetCheck())
+			continue;
+		(m_pLibuv->*fun)(pItem->GetInfo());
+	}
+	return true;
+}
+
+void CMainDlg::DeleteConnect(bool bAllSelect)
+{
+	if (!bAllSelect)
+	{
+		if (!m_u_cur.m_pConnect)
+			return;
+		m_pLibuv->RemoveConnect(m_u_cur.m_pConnect->GetInfo());
+		return;
+	}
+	CConnectListItem* pItem = nullptr;
+	for (int i = 0; i < m_pConnect_List->GetCount(); i++)
+	{
+		pItem = (CConnectListItem*)m_pConnect_List->GetItemAt(i);
+		if (!pItem->GetCheck())
+			continue;
+		m_pLibuv->RemoveConnect(pItem->GetInfo());
+	}
+}
+
+bool CMainDlg::AnlySelect(CListUI* pList)
+{
+	if (!pList)
+		return false;
+	CMyListItem* pItem = nullptr;
+	for (size_t i = 0; i < pList->GetCount(); i++)
+	{
+		pItem = (CMyListItem*)pList->GetItemAt(i);
+		if (pItem->GetCheck())
+			return true;
+	}
+	return false;
 }
 
 bool CMainDlg::ButtonNotify(void* pNotify)
@@ -441,6 +642,8 @@ bool CMainDlg::ListNotify(void* pNotify)
 		return true;
 	if (pNotifyUI->sType == DUI_MSGTYPE_MENU)//菜单弹出消息
 	{
+		if (pNotifyUI->wParam < 1)
+			return true;
 		CListUI* pList = (CListUI*)pNotifyUI->pSender;
 		RECT rcHead = pList->GetHeader()->GetPos();
 		if (PtInRect(&rcHead, pNotifyUI->ptMouse))
@@ -449,11 +652,13 @@ bool CMainDlg::ListNotify(void* pNotify)
 		ClientToScreen(m_hWnd, &pt);
 		if (pList == m_pMapping_List)
 		{
+			m_u_cur.m_pMapping = (CMappingListItem*)m_pMapping_List->GetItemAt(pNotifyUI->wParam - 1);
 			STRINGorID xml(L"mappingmenu.xml");
 			ShowMenu(&m_PaintManager, xml, pt);
 		}
 		else if (pList == m_pConnect_List)
 		{
+			m_u_cur.m_pConnect = (CConnectListItem*)m_pConnect_List->GetItemAt(pNotifyUI->wParam - 1);
 			STRINGorID xml(L"connectmenu.xml");
 			ShowMenu(&m_PaintManager, xml, pt);
 		}
@@ -464,8 +669,11 @@ bool CMainDlg::ListNotify(void* pNotify)
 void CMainDlg::UpDataConnectList(CControlUI* p_sender)
 {
 	m_pCur_mapping = static_cast<CMappingListItem*>(p_sender->GetInterface(DUI_CTR_MAPPINGLISTITEM));
-	if (!m_pCur_mapping)
+	//没有开始映射，直接返回
+	if (!m_pCur_mapping || !(m_pCur_mapping->GetInfo()->nState & MAPPING_START))
 		return;
+	m_pConnect_List->RemoveAll();
+	m_pLibuv->GetAllConnect(m_pCur_mapping->GetInfo());//获取所有的连接
 }
 
 bool CMainDlg::ListItemNotify(void* p)
