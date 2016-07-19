@@ -328,12 +328,13 @@ LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 		bHandled = true;
 		if (!pInfo || size == 0)
 			return S_OK;
-		if ((*pInfo)->pMapping != m_pCur_mapping->GetInfo())
+		if (!m_pCur_mapping || (*pInfo)->pMapping != m_pCur_mapping->GetInfo())
 			return S_OK;
 		for (size_t i = 0; i < size; i++)
 		{
 			CConnectListItem* pitem = new CConnectListItem(*pInfo);
 			m_pConnect_List->Add(pitem);
+			++pInfo;
 		}
 		m_pConnect_List->SetVisible();
 		return S_OK;
@@ -355,7 +356,7 @@ void CMainDlg::NotifyMappingMessage(UINT nType, MappingInfo* pInfo)
 
 void CMainDlg::NotifyGetAllConnectByMapping(ConnectInfo** pInfo, size_t size)
 {
-	::SendMessage(m_hWnd, USER_ALLCONNECT_MSG, (WPARAM)pInfo, (LPARAM)pInfo);
+	::SendMessage(m_hWnd, USER_ALLCONNECT_MSG, (WPARAM)pInfo, (LPARAM)size);
 }
 
 void CMainDlg::OnMenuItemInit(CMenuElementUI* pMenuItem, LPARAM l_param)
@@ -489,7 +490,7 @@ void CMainDlg::DealWithConnectMsg(WPARAM w_param, ConnectInfo* connect_info)
 {
 	if (w_param == MSG_ADD_CONNECT)
 	{
-		if (connect_info->pMapping == m_pCur_mapping->GetInfo())
+		if (m_pCur_mapping && connect_info->pMapping == m_pCur_mapping->GetInfo())
 		{
 			CConnectListItem* pItem = new CConnectListItem(connect_info);
 			m_pConnect_List->Add(pItem);
@@ -498,7 +499,7 @@ void CMainDlg::DealWithConnectMsg(WPARAM w_param, ConnectInfo* connect_info)
 	}
 	else if (w_param == MSG_DELETE_CONNECT)
 	{
-		if (connect_info->pMapping == m_pCur_mapping->GetInfo())
+		if (m_pCur_mapping && connect_info->pMapping == m_pCur_mapping->GetInfo())
 		{
 			m_pConnect_List->Remove((CControlUI*)connect_info->pUserData);
 			connect_info->pUserData = nullptr;

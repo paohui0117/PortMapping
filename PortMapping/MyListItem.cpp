@@ -8,13 +8,13 @@ CDuiString GetFlowString(UINT32 nM, UINT32 nB)
 	UINT cur1 = nM >> 10; //G
 	UINT cur2 = nB >> 10; //KB
 	if (cur1 > 0)
-		str.Format(L"%udG,%udM,%udKB", cur1, nM & 0x3ff, cur2);
+		str.Format(L"%uG,%uM,%uKB", cur1, nM & 0x3ff, cur2);
 	else if (nM > 0)
-		str.Format(L"%udM,%udKB,%udB", nM, cur2, nB & 0x3ff);
+		str.Format(L"%uM,%uKB,%uB", nM, cur2, nB & 0x3ff);
 	else if (cur2 > 0)
-		str.Format(L"%udKB,%udB", cur2, nB & 0x3ff);
+		str.Format(L"%uKB,%uB", cur2, nB & 0x3ff);
 	else
-		str.Format(L"%udB", nB);
+		str.Format(L"%uB", nB);
 	return str;
 }
 
@@ -451,6 +451,7 @@ void CConnectListItem::DoInit()
 {
 	if (!m_pInfo || !m_pInfo->pMapping)
 		return;
+	CMyListItem::DoInit();
 	CDuiString str;
 	char ip[50] = { 0 };
 	int nport;
@@ -511,4 +512,5 @@ void CConnectListItem::Updata(bool bforce)
 	//·þÎñ¶Ë·¢ËÍ   server¡ª¡ª>agent¡ª¡ª>client
 	str = GetFlowString(m_pInfo->nCurFromServerM, m_pInfo->nCurFromServerB);
 	SetText(7, str);
+	Invalidate();
 }
