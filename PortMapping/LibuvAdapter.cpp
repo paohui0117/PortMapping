@@ -7,9 +7,20 @@ class IOCallBack
 public:
 	//所有的回调函数
 
-	//空回调,用来保持循环存活
+	//用来保持循环存活，同时检测是否需要退出
 	static void null_cb(uv_check_t* handle)
-	{}
+	{
+		//优雅停止
+		/*CLibuvAdapter* pThis = (CLibuvAdapter*)handle->loop->data;
+		if (!pThis)
+			return;
+		if (!pThis->m_bClosing)
+			return;
+		if (pThis->m_mapMapping.size() == 0 && pThis->m_mapConnect.size() == 0)
+		{
+			uv_check_stop(handle);
+		}*/
+	}
 	
 	//线程回调函数
 	static void LoopThread(void *arg)
@@ -123,7 +134,7 @@ public:
 			return;
 		if (pConInfo->pMapping->bTCP)
 		{
-			//关闭本tcp handle
+			//关闭服务端链接
 			pConInfo->u.tcp.server_tcp.data = pConInfo;
 			uv_close((uv_handle_t*)&pConInfo->u.tcp.server_tcp, tcp_connect_close_cb);
 			//断开与客户端的链接
@@ -197,8 +208,7 @@ public:
 		}
 		int err = WSAGetLastError();
 
-		
-		pConInfo->bInMap = false;
+		pConInfo->bInMap = NOT_IN_MAP;
 		//通过成员指针的地址获取结构体本身的地址
 		pConInfo->pMapping = CONTAINING_RECORD(server, MappingInfo, u.listen_tcp);
 		uv_tcp_init(pConInfo->pMapping->pLoop, &pConInfo->u.tcp.client_tcp);
@@ -217,7 +227,9 @@ public:
 			delete pConInfo;
 			return;
 		}
-		
+		CLibuvAdapter* pThis = (CLibuvAdapter*)pConInfo->pMapping->pLoop->data;
+		pConInfo->bInMap = IN_MAP_WAIT;
+		pThis->AddConnect(pConInfo);
 	}
 
 	//主动链接回调函数
@@ -237,9 +249,10 @@ public:
 			pConInfo->u.tcp.client_tcp.data = pConInfo;
 			uv_close((uv_handle_t*)&pConInfo->u.tcp.client_tcp, tcp_connect_close_cb);
 		}
-		//成功了，将记录添加到对应的容器
+		//成功了,修改状态
+		pConInfo->bInMap = IN_MAP_SUCC;
 		CLibuvAdapter* pThis = (CLibuvAdapter*)pConInfo->pMapping->pLoop->data;
-		pThis->AddConnect(pConInfo);
+		pThis->ChangeConnect(pConInfo);
 		//开始读取数据
 		pConInfo->u.tcp.server_tcp.data = pConInfo;
 		uv_read_start((uv_stream_t*)&pConInfo->u.tcp.server_tcp, alloc_cb, tcp_read_cb);
@@ -458,7 +471,7 @@ string w2a(LPCWSTR str)
 }
 
 
-CLibuvAdapter::CLibuvAdapter() : m_pLoop(nullptr), m_Loop_thread(nullptr), m_bRemoveAll(true)
+CLibuvAdapter::CLibuvAdapter() : m_pLoop(nullptr), m_Loop_thread(nullptr), m_bRemoveAll(true), m_bClosing(false)
 {
 	WSADATA wsa_data;
 	int errorno = WSAStartup(MAKEWORD(2, 2), &wsa_data);
@@ -594,8 +607,6 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 		map<USHORT, map<Connectkey, ConnectInfo*>>::iterator itPort = m_mapConnect.find(nPort);
 		if (itPort == m_mapConnect.end())//没有记录
 		{
-			delete connect_info;
-			connect_info = nullptr;
 			return true;
 		}
 		//继续查找
@@ -603,8 +614,6 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 		map<Connectkey, ConnectInfo*>::iterator itAddr = itPort->second.find(curKey);
 		if (itAddr == itPort->second.end())
 		{
-			delete connect_info;
-			connect_info = nullptr;
 			return true;
 		}
 		//有记录，删除记录
@@ -613,7 +622,7 @@ bool CLibuvAdapter::RemoveConnect(ConnectInfo* connect_info, bool bAsync)
 		{
 			(*it)->NotifyConnectMessage(MSG_DELETE_CONNECT, connect_info);
 		}
-		--itAddr->second->pMapping->nConnect;
+		--(itAddr->second->pMapping->nConnect);
 		itPort->second.erase(itAddr);
 
 		return true;
@@ -819,6 +828,20 @@ void CLibuvAdapter::_GetAllConnect(MappingInfo* mapping_info)
 	delete[] _connectList;
 }
 
+void CLibuvAdapter::ChangeConnect(ConnectInfo* connect_info)
+{
+	if (!connect_info)
+		return;
+	if (connect_info->bInMap == IN_MAP_SUCC)
+	{
+		//通知
+		for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
+		{
+			(*it)->NotifyConnectMessage(MSG_CONNECT_STATE_CHANGE, connect_info);
+		}
+	}
+}
+
 void CLibuvAdapter::AddConnect(ConnectInfo* connect_info)
 {
 	USHORT nPort = htons(connect_info->pMapping->Addr_agent.sin_port);
@@ -835,7 +858,7 @@ void CLibuvAdapter::AddConnect(ConnectInfo* connect_info)
 		auto ret = itPort->second.insert(pair<Connectkey, ConnectInfo*>(curKey, connect_info));
 		ASSERT(ret.second);//不应该有重复的数据
 	}
-	connect_info->bInMap = true;
+
 	//通知
 	for (set<INotifyLoop*>::iterator it = m_setNotify.begin(); it != m_setNotify.end(); it++)
 	{

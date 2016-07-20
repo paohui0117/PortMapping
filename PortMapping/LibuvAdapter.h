@@ -47,6 +47,9 @@ struct MappingInfo
 	} u;
 	void*			pUserData;
 };
+#define  NOT_IN_MAP		0x000000	//不在记录中，初始状态
+#define	 IN_MAP_WAIT	0x000001	//在记录中，但是还未与服务端建立连接
+#define	 IN_MAP_SUCC	0x000002	//在记录中，链接建立成功
 struct ConnectInfo
 {
 	MappingInfo*	pMapping;		//本链接所属的对应映射
@@ -67,9 +70,9 @@ struct ConnectInfo
 		uv_udp_t		server_udp;//udp与服务端通信的socket，本socket收到的信息通过listen_tcp发送给客户端
 								   //listen_tcp收到的信息通过server_udp发送给服务端
 	} u;
-	bool			bInMap;			//是否已经加入到记录中
-	void*			pUserData;
+	char			bInMap;			//是否已经加入到记录中
 	bool			bDeleting;
+	void*			pUserData;
 };
 struct Connectkey
 {
@@ -95,10 +98,11 @@ inline bool operator<(const Connectkey& A, const Connectkey& B)
 wstring a2w(const char* str);
 string w2a(LPCWSTR str);
 
-#define MSG_ADD_CONNECT		0x0000001
-#define MSG_DELETE_CONNECT	0x0000002
+#define MSG_ADD_CONNECT		0x0000001		//收到一个新的链接   与客户端建立了链接
+#define MSG_DELETE_CONNECT	0x0000002		//断开了一个链接
 
-#define MSG_CLEAR_CONNECT	0x0000004
+#define MSG_CLEAR_CONNECT	0x0000004		//清空所有链接
+#define MSG_CONNECT_STATE_CHANGE 0x0000008	//链接状态改变了  针对TCP  表示连上了服务端
 
 #define MSG_LISTEN_FAIL		0x0000010
 #define MSG_MAPPING_STOP	0x0000040
@@ -158,10 +162,14 @@ private:
 	void _RemoveMapping(MappingInfo* mapping_info);
 
 	void _GetAllConnect(MappingInfo* mapping_info);
+
+	void ChangeConnect(ConnectInfo* connect_info);//链接状态改变了
 public:
 	uv_loop_t*		m_pLoop;
 private:
 	bool				m_bRemoveAll;		//当本地监听发生错误断开时或者用户停止时，是否删除该映射的所有链接,默认为true
+	bool				m_bClosing;			//是否需要关闭
+
 	set<INotifyLoop*>	m_setNotify;
 
 	uv_thread_t		m_Loop_thread;
@@ -169,5 +177,6 @@ private:
 	//data:
 	map<USHORT, MappingInfo>	m_mapMapping;
 	map<USHORT, map<Connectkey, ConnectInfo*>> m_mapConnect;
+	
 };
 

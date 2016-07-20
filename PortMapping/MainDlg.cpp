@@ -332,6 +332,8 @@ LRESULT CMainDlg::HandleCustomMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 			return S_OK;
 		for (size_t i = 0; i < size; i++)
 		{
+			if ((*pInfo)->bInMap != IN_MAP_SUCC)//只显示成功的链接
+				continue;
 			CConnectListItem* pitem = new CConnectListItem(*pInfo);
 			m_pConnect_List->Add(pitem);
 			++pInfo;
@@ -488,9 +490,10 @@ bool CMainDlg::CheckAllInfo()
 
 void CMainDlg::DealWithConnectMsg(WPARAM w_param, ConnectInfo* connect_info)
 {
-	if (w_param == MSG_ADD_CONNECT)
+	if (w_param == MSG_ADD_CONNECT || w_param == MSG_CONNECT_STATE_CHANGE)
 	{
-		if (m_pCur_mapping && connect_info->pMapping == m_pCur_mapping->GetInfo())
+		if (m_pCur_mapping && connect_info->pMapping == m_pCur_mapping->GetInfo() && 
+			connect_info->bInMap == IN_MAP_SUCC)
 		{
 			CConnectListItem* pItem = new CConnectListItem(connect_info);
 			m_pConnect_List->Add(pItem);
